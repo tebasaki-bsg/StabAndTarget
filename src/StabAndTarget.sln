@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2036
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{c05b447f-77b5-4b7f-adae-76de7d2ee629}") = "StabAndTarget_assem", "StabAndTarget_assem\StabAndTarget_assem.csproj", "{3e34a1aa-d962-4b49-8d88-79efa7f5d685}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3e34a1aa-d962-4b49-8d88-79efa7f5d685}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3e34a1aa-d962-4b49-8d88-79efa7f5d685}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3e34a1aa-d962-4b49-8d88-79efa7f5d685}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3e34a1aa-d962-4b49-8d88-79efa7f5d685}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3332fe74-8e84-4f50-a9ff-7785a5a801ff}
+	EndGlobalSection
+EndGlobal
