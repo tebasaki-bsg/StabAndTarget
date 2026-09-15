@@ -123,11 +123,11 @@ A newly created mod. <!-- FIX: Insert a short description here. -->
 		 You also need to list resources used in your Blocks and Entities.
 		 Available resource types are Mesh, Texture, AudioClip, and AssetBundle. -->
 	<Resources>
-		<!-- <Mesh name="some-mesh-name" path="some_mesh_file.obj" /> -->
-		<!-- <Texture name="some-texture-name" path="some_texture_file.png" /> -->
-
-        <!--<Texture name="icon" path="icon.png" />-->
-        <!--<Texture name="thumbnail" path="thumbnail.png" />-->
+		<Mesh name="StabBaseBody" path="object/StabBaseBody.obj" />
+		<Mesh name="StabSlaveBody" path="object/StabSlaveBody.obj" />
+		
+		<Texture name="StabBaseBody_tex" path="png/StabBaseBody_tex.png" />
+		<Texture name="StabSlaveBody_tex" path="png/StabSlaveBody_tex.png" />
 	</Resources>
 
 

@@ -26,7 +26,7 @@
 	<Name>StabSlave</Name>
 	
 	<!-- TODO: Change the mass to something appropriate -->
-	<Mass>0.3</Mass>
+	<Mass>1.0</Mass>
 	
 	<!-- Additional keywords that can be used to search for this block
 		 in the search tab of the block bar.
@@ -64,9 +64,20 @@
 		 The Shooting, Spewing, Spinning, and Steering modules are included by default
 		 and mods can also add new modules.
 		 Check the documentation for more information on how to use modules. -->
-	<!--<Modules>
-	
-	</Modules>-->
+	<ModuleMapperTypes>
+		<Slider displayName="ID" key="master-id" min="0" max="100" default="0" unclamped="true"/>
+		<Slider displayName="Power" key="power" min="0" max="100" default="10" unclamped="true"/>
+		<Key displayName="Activate" key="activate" default="C" />
+	</ModuleMapperTypes>
+
+	<Modules>
+		<StaTStabSlaveBlockModule modid="535315b3-705a-4f03-94c3-51584dff3863">
+			<!-- XmlElement("AA") key="bb" /  Slider displayName="CC" key="bb" /  AA key="bb"-->
+			<MasterIDSlider key="master-id" />
+			<PowerSlider key="power" />
+			<ActivateKey key="activate" />
+		</StaTStabSlaveBlockModule>
+	</Modules>
 	
 	<!-- Include to make block take damage. -->
 	<!-- <Health>20</Health> -->
@@ -96,19 +107,19 @@
 	<!-- Optionally specify type of damage done to entities.
 		 Can be one of "Blunt", "Sharp", "Fire" -->
 	<!-- <DamageType>Blunt</DamageType> -->
-	
-	<Mesh name="<!-- TODO: Insert mesh resource name here. -->"> <!-- Must be defined as a resource in the manifest. -->
-		<!--<Position x="0.0" y="0.0" z="0.0" />
-		<Rotation x="0.0" y="0.0" z="0.0" />
-		<Scale x="1.0" y="1.0" z="1.0" /> -->
-	</Mesh>
-	
-	<Texture name="<!-- TODO: Insert texture resource name here. -->" /> <!-- Must be defined as a resource in the manifest. -->
-	
-	<Icon>
+
+	<Mesh name="StabSlaveBody"><!-- Must be defined as a resource in the manifest. -->
 		<Position x="0.0" y="0.0" z="0.0" />
 		<Rotation x="0.0" y="0.0" z="0.0" />
 		<Scale x="1.0" y="1.0" z="1.0" />
+	</Mesh>
+
+	<Texture name="StabSlaveBody_tex" /><!-- Must be defined as a resource in the manifest. -->
+
+	<Icon>
+		<Position x="0.0" y="0.0" z="0.0" />
+		<Rotation x="25.0" y="45.0" z="0.0" />
+		<Scale x="0.5" y="0.5" z="0.5" />
 	</Icon>
 	
 	<!-- Including this causes a direction arrow, like the one on wheels and other turnable blocks,
@@ -147,17 +158,8 @@
 		<BoxCollider>
 			<Position x="0.0" y="0.0" z="0.0" />
 			<Rotation x="0.0" y="0.0" z="0.0" />
-			<Scale x="1.0" y="1.0" z="1.0" />
+			<Scale x="0.5" y="0.5" z="0.5" />
 		</BoxCollider>
-		<SphereCollider>
-			<Position x="0.0" y="0.0" z="0.0" />
-			<Radius>1.0</Radius>
-		</SphereCollider>
-		<CapsuleCollider>
-			<Position x="0.0" y="0.0" z="0.0" />
-			<Rotation x="0.0" y="0.0" z="0.0" />
-			<Capsule direction="X" radius="1.0" height="2.0" />
-		</CapsuleCollider>
 	</Colliders>
 	
 	<BasePoint hasAddingPoint="false">
@@ -167,11 +169,6 @@
 	</BasePoint>
 	
 	<AddingPoints>
-		<!-- TODO: Insert AddingPoint definitions here. Example:-->
-		<AddingPoint>
-			<Position x="0.0" y="0.0" z="0.0" />
-			<Rotation x="0.0" y="0.0" z="0.0" />
-			<Stickiness enabled="false" radius="0"/>
-		</AddingPoint>
+		
 	</AddingPoints>
 </Block>
