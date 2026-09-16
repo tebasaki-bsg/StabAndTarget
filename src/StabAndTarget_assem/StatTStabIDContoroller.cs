@@ -6,16 +6,16 @@ using System.Text;
 namespace StaTSpace
 {
     /// <summary>
-    /// StabBaseを登録・読み出しを行う関数をまとめたクラス。
+    /// StabBaseの登録・読み出しを行う関数をまとめたクラス。
     /// 各StabBaseは、"(各ブロックの持つStabID)_(各ブロックの持ち主のID = BlockPlayerID)"というキーで保存される。 
     /// </summary>
     public static class StatTStabIDContoroller
     {
         //二重登録防止のためのDictionary
-        private static readonly Dictionary<BlockBehaviour, string> assigned = new Dictionary<BlockBehaviour, string>();
+        private static Dictionary<BlockBehaviour, string> assigned = new Dictionary<BlockBehaviour, string>();
 
         /// <summary>
-        /// IDを発行し、艦船の登録をShipRegisterに行わせる関数。
+        /// IDを発行し、StabBaseブロックの登録を行う関数。
         /// StabBaseModuleBehaviour.OnSimulateStart から呼ぶ。
         /// </summary>
         public static void RegisterStabBase(BlockBehaviour bb, int stabID, int blockPlayerID)

@@ -9,7 +9,7 @@
 	<Name>StabAndTarget</Name>
 	<Author>Mod Author</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.0.1</Version>
+	<Version>0.1.0</Version>
 	
 	<Description>
 A newly created mod. <!-- FIX: Insert a short description here. -->
@@ -92,6 +92,8 @@ A newly created mod. <!-- FIX: Insert a short description here. -->
 		<!-- <Block path="SomeBlock.xml" /> -->
 		<Block path="StabBase.xml" />
 		<Block path="StabSlave.xml" />
+		<Block path="IFF.xml" />
+		<Block path="TargetingPod.xml" />
 	</Blocks>
 	
 	<!-- Any entities (level objects) your mod adds to the game.
@@ -125,9 +127,13 @@ A newly created mod. <!-- FIX: Insert a short description here. -->
 	<Resources>
 		<Mesh name="StabBaseBody" path="object/StabBaseBody.obj" />
 		<Mesh name="StabSlaveBody" path="object/StabSlaveBody.obj" />
+		<Mesh name="IFFBody" path="object/IFFBody.obj" />
+		<Mesh name="TargetingPodBody" path="object/TargetingPodBody.obj" />
 		
 		<Texture name="StabBaseBody_tex" path="png/StabBaseBody_tex.png" />
 		<Texture name="StabSlaveBody_tex" path="png/StabSlaveBody_tex.png" />
+		<Texture name="IFFBody_tex" path="png/IFFBody_tex.png" />
+		<Texture name="TargetingPodBody_tex" path="png/TargetingPodBody_tex.png" />
 	</Resources>
 
 

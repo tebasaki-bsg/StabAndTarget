@@ -30,6 +30,17 @@ namespace StaTSpace
         public int stabID;
         public int BlockPlayerID;
 
+        //建築中⇒StabBaseの辞書をクリア
+        public override void SafeAwake()
+        {
+            base.SafeAwake();
+
+            if(BlockBehaviour.isBuildBlock)
+            {
+                StatTStabIDContoroller.ClearDictionary();
+            }
+        }
+
         ///<summary>
         ///シミュ開始時、ID, ブロックの持ち主のID, BlockBehaviourを揃って登録
         /// </summary>
@@ -43,18 +54,9 @@ namespace StaTSpace
             //BlockPlayerIDを取得
             BlockPlayerID = BlockBehaviour.ParentMachine.PlayerID;
 
-            //ID登録命令
+            //ID登録命令、こちらは一意に定まるためホストクライアント両方が行い、通信等は行わない
             StatTStabIDContoroller.RegisterStabBase(BlockBehaviour, stabID, BlockPlayerID);
         }
 
-        public override void OnSimulateStop()
-        {
-            base.OnSimulateStop();
-
-            if(StatMaster.InGlobalPlayMode)
-            {
-                StatTStabIDContoroller.ClearDictionary();
-            }
-        }
     }
 }
