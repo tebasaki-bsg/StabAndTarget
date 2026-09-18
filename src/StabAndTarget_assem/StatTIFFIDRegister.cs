@@ -22,19 +22,22 @@ namespace StaTSpace
         public static int RegisterIFF(BlockBehaviour bb, StaTIFFBlockModuleBehaviour iffBehaviour)
         {
             if (bb == null) return 0;   //nullの時はどうでもいいので0を返す
-            
+
             //登録用に引数からIFFEntryを作る
             var iffEntry = new IFFEntry
             {
                 SessionID = NextSessionID,
-                IFFName = iffBehaviour.MyName,
+                IFFName = iffBehaviour.myName,
                 BlockBehaviour = bb,
+                IFFBehaviour = iffBehaviour,
                 Rigidbody = bb.GetComponent<Rigidbody>(),
                 IsEnemy = iffBehaviour.isEnemy,
-                Team = iffBehaviour.Team,
+                Team = iffBehaviour.team,
                 Alive = iffBehaviour.alive,
                 UseHealth = iffBehaviour.useHealth,
-                Health = iffBehaviour.health
+                Health = iffBehaviour.health,
+                LockState = StaTLockState.None,
+                CurrentAiming = false
             };
 
             //IDとIFFEntryを辞書に登録
@@ -53,8 +56,8 @@ namespace StaTSpace
                 StaTTargetController.IFFTeamListDict[team].Add(NextSessionID);
             }
 
-            //マルチの時はクライアントに登録命令を送信
-            if(!StatMaster.isMP)
+            //マルチの時はクライアントに登録命令を送信（ソロのレベルエディタがあるので>1とする）
+            if(StatMaster.isMP)
             {
                 //クライアントに登録命令を送信
                 ModNetworking.SendToAll(StaTMessageController.RegisterIFFMessageType.CreateMessage(Block.From(bb), NextSessionID));
@@ -75,14 +78,17 @@ namespace StaTSpace
             var iffEntry = new IFFEntry
             {
                 SessionID = sessionID,
-                IFFName = iffBehaviour.MyName,
+                IFFName = iffBehaviour.myName,
                 BlockBehaviour = bb,
+                IFFBehaviour = iffBehaviour,
                 Rigidbody = bb.GetComponent<Rigidbody>(),
                 IsEnemy = iffBehaviour.isEnemy,
-                Team = iffBehaviour.Team,
-                Alive = iffBehaviour.Alive,
-                UseHealth = iffBehaviour.UseHealth,
-                Health = iffBehaviour.Health
+                Team = iffBehaviour.team,
+                Alive = iffBehaviour.alive,
+                UseHealth = iffBehaviour.useHealth,
+                Health = iffBehaviour.health,
+                LockState = StaTLockState.None,
+                CurrentAiming = false
             };
 
             //IDとIFFEntryを辞書に登録
@@ -98,7 +104,7 @@ namespace StaTSpace
                 }
 
                 //それ以外は辞書にIDを登録
-                StaTTargetController.IFFTeamListDict[team].Add(NextSessionID);
+                StaTTargetController.IFFTeamListDict[team].Add(sessionID);
             }
         }
 
@@ -128,7 +134,7 @@ namespace StaTSpace
         }
 
         //被撃破時などに各辞書・リストから自身を消させる
-        public static void RemoveMe(int SessionID, BlockBehaviour bb)
+        public static void RemoveMe(int SessionID)
         {
             StaTTargetController.IFFDict.Remove(SessionID);
 
@@ -141,6 +147,28 @@ namespace StaTSpace
                     StaTTargetController.IFFTeamListDict[team].Remove(SessionID);
                 }
             }
+
+            bool wasCurrentAim = (StaTTargetController.CurrentAimID == SessionID);
+
+            if(StaTTargetController.PrimaryLockedList.Contains(SessionID))
+            {
+                StaTTargetController.PrimaryLockedList.Remove(SessionID);
+            }
+
+            if (StaTTargetController.SecondaryLockedList.Contains(SessionID))
+            {
+                StaTTargetController.SecondaryLockedList.Remove(SessionID);
+            }
+
+            if (StaTTargetController.SecondaryLockingTimerDict.ContainsKey(SessionID))
+            {
+                StaTTargetController.SecondaryLockingTimerDict.Remove(SessionID);
+            }
+
+            if(wasCurrentAim)
+            {
+                StaTTargetController.Instance.AutoReselect();
+            }
         }
     }
 
@@ -152,6 +180,7 @@ namespace StaTSpace
         public string IFFName;
 
         public BlockBehaviour BlockBehaviour;
+        public StaTIFFBlockModuleBehaviour IFFBehaviour;
         public Rigidbody Rigidbody;
 
         public bool IsEnemy;
@@ -159,6 +188,8 @@ namespace StaTSpace
         public bool Alive;
         public bool UseHealth;
         public float Health;
+        public StaTLockState LockState;
+        public bool CurrentAiming;
 
     }
 }

@@ -15,7 +15,9 @@ namespace StaTSpace
 	public class Mod : ModEntryPoint
 	{
 		public static GameObject StaTMod;
+		public static Canvas ModCanvas;
 		public static GameObject TargetController;
+		public static GameObject GameStateObserver;
 		public static bool isJapanese = SingleInstance<LocalisationManager>.Instance.currLangName.Contains("日本語");
 
 		public static Dictionary<string, Transform> StabBaseDict;   //StabBaseをまとめたもの
@@ -41,15 +43,24 @@ namespace StaTSpace
 			//MBSModを作成、シーンチェンジしても壊さないように
 			StaTMod = new GameObject("StaTMod");
 			UnityEngine.Object.DontDestroyOnLoad(StaTMod);
-			Canvas val = StaTMod.AddComponent<Canvas>();
-			val.renderMode = RenderMode.ScreenSpaceOverlay;
-			val.sortingOrder = 0;
-			val.gameObject.layer = LayerMask.NameToLayer("HUD");
-			StaTMod.AddComponent<CanvasScaler>().scaleFactor = 1f;   //画面サイズに応じてUIをスケーリングするためのコンポーネントをアタッチする
+			ModCanvas = StaTMod.AddComponent<Canvas>();
+			ModCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+			ModCanvas.sortingOrder = 0;
+			ModCanvas.gameObject.layer = LayerMask.NameToLayer("HUD");
 
+			CanvasScaler scaler = StaTMod.AddComponent<CanvasScaler>();   //画面サイズに応じてUIをスケーリングするためのコンポーネントをアタッチする
+			scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;	//画面サイズに応じてスケーリングするモード
+			scaler.referenceResolution = new Vector2(1920f, 1080f);	//1080pをベースとする
+
+			//ロックオン処理を行うオブジェクト
 			TargetController = new GameObject("TargetController");
 			TargetController.transform.SetParent(StaTMod.transform);
 			TargetController.AddComponent<StaTTargetController>();
+
+			//ゲームの状態（シミュ中かなど）を監視するオブジェクト
+			GameStateObserver = new GameObject("GameStateObserver");
+			GameStateObserver.transform.SetParent(StaTMod.transform);
+			GameStateObserver.AddComponent<StaTGameStateObserver>();
 
 			//BlockSelectorをBW2_UIに追加
 			SingleInstance<BlockSelector>.Instance.transform.parent = StaTMod.transform;
@@ -62,7 +73,7 @@ namespace StaTSpace
 			Modding.Modules.CustomModules.AddBlockModule<StaTStabSlaveBlockModule, StaTStabSlaveBlockModuleBehaviour>("StaTStabSlaveBlockModule", true);
 			Modding.Modules.CustomModules.AddBlockModule<StaTIFFBlockModule, StaTIFFBlockModuleBehaviour>("StaTIFFBlockModule", true);
 
-
+			StaTMessageController.SetUpMessage();
 		}
 	}
 

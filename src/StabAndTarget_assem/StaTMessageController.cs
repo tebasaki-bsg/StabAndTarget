@@ -44,11 +44,11 @@ namespace StaTSpace
 
             //n番のプレイヤーが、IDがn番のIFFを、n次ロックしている
             CurrentAimingMessageType = ModNetworking.CreateMessageType(DataType.Integer, DataType.Integer, DataType.Integer);
-            ModNetworking.Callbacks[RegisterIFFMessageType] += new Action<Message>(OnCurrentAimingReceived);
+            ModNetworking.Callbacks[CurrentAimingMessageType] += new Action<Message>(OnCurrentAimingReceived);
 
             //n番のプレイヤーのカメラ方向
             CurrentCameraMessageType = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3);
-            ModNetworking.Callbacks[RegisterIFFMessageType] += new Action<Message>(OnCurrentCameraReceived);
+            ModNetworking.Callbacks[CurrentCameraMessageType] += new Action<Message>(OnCurrentCameraReceived);
         }
 
 
@@ -81,7 +81,7 @@ namespace StaTSpace
         {
             int PlayerID = (int)message.GetData(0);
             int SessionID = (int)message.GetData(1);
-            StaTLockTier LockTier = (StaTLockTier)message.GetData(2);
+            StaTLockState LockTier = (StaTLockState)message.GetData(2);
         }
 
         //クライアントが何もロックしていない時はカメラ座標が送られる。

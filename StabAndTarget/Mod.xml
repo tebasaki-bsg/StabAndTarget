@@ -134,6 +134,10 @@ A newly created mod. <!-- FIX: Insert a short description here. -->
 		<Texture name="StabSlaveBody_tex" path="png/StabSlaveBody_tex.png" />
 		<Texture name="IFFBody_tex" path="png/IFFBody_tex.png" />
 		<Texture name="TargetingPodBody_tex" path="png/TargetingPodBody_tex.png" />
+
+		<Texture name="IFFIcon" path="png/IFFIcon.png" />
+		<Texture name="LockIcon" path="png/LockIcon.png" />
+		<Texture name="LockAreaIcon" path="png/LockAreaIcon.png" />
 	</Resources>
 
 

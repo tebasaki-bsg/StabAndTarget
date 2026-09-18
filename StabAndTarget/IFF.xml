@@ -72,6 +72,8 @@
 		<StaTIFFBlockModule modid="535315b3-705a-4f03-94c3-51584dff3863">
 			<!-- XmlElement("AA") key="bb" /  Slider displayName="CC" key="bb" /  AA key="bb"-->
 			<IsEnemyToggle key="is-enemy" />
+			<Icon name="IFFIcon" />
+			<LockIcon name="LockIcon" />
 		</StaTIFFBlockModule>
 	</Modules>
 	

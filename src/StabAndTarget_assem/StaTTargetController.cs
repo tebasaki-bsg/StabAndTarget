@@ -25,11 +25,12 @@ namespace StaTSpace
         /// ①IFFにSessionIDを与え、IFF全体をまとめたIFFDictに登録
         /// ②チームごとに敵となるIFFのIDをまとめたIFFTeamListDictに登録
         /// ③各プレイヤーのStaTTargetControllerが、IFFTeamListDict内の自チームのListから、ロックオン領域内にあるもののSessionIDを取得し、PrimaryLockedListに入れる（一次ロック）
-        ///     ロックオン領域：
         /// ④SecondaryLockingDict[SessionID]が0以下になったら二次ロックが完了、SecondaryLockedListに入れる
         /// ④-2: ロック準備中に領域を外れたらPrimaryLockedList, SecondaryLockedList, SecondaryLockingDictから削除
-        /// ⑤
+        /// ④-3: 一次ロック時, 二次ロック完了時, ロック解除時にそのIFFに通知が飛ぶ
         /// </summary>
+
+        public static StaTTargetController Instance { get; private set; }   //シングルトン
 
         //各辞書・リストの宣言（意味は上記を参照）
         public static Dictionary<int, IFFEntry> IFFDict = new Dictionary<int, IFFEntry>();
@@ -46,18 +47,24 @@ namespace StaTSpace
         public static List<int> SecondaryLockedList = new List<int>();
 
         public static bool init = false;    //シミュ開始時にfalseの場合はSimulationStartInit()を走らせる関数
-        public static int CurrentAimID = 0; //自分が現在照準中の敵のID
+        public static int CurrentAimID = 10000; //自分が現在照準中の敵のID
         public static int CurrentOrder = 0; //自分がロックオン中の敵のうち何番目を照準しているか
         public static bool LockingSomething = false;    //何かしらをロックオンしているか（一次ロック含む）
         public static int MyPlayerID = 0;   //自分のNetworkID,シミュ開始時に変更
-        public static MPTeam MyTeam = 0;    //シミュ開始時にコアブロックから指定
+        public static MPTeam MyTeam = MPTeam.None;    //シミュ開始時にコアブロックから指定
 
-        public static Vector3 CorePosition;
+        public static Vector3 CorePosition; //コアブロックの座標
         public static Vector3 CamForward;   //プレイヤーのカメラ方向
         public static bool TargetChangePressed = false;  //ターゲット切替えキーが押されたかの確認, キーはコアブロックにある
 
         private List<int> LastSentPrimary = new List<int>();    //最後にホストに送信したリスト
         private List<int> LastSentSecondary = new List<int>();    //最後にホストに送信したリスト
+        private Camera MainCamera = Camera.main;
+
+        public void Awake()
+        {
+            Instance = this;
+        }
 
         /// <summary>
         /// 初期化。自分のNetworkIDを取得し、IFFTeamListDictを初期化。
@@ -86,8 +93,10 @@ namespace StaTSpace
                 return;
             }
 
+            CamForward = MainCamera.transform.forward;
+
             //各IFFのロックオン状態を更新
-            UpdateLock(MyTeam, CorePosition, CamForward, Time.fixedDeltaTime);
+            UpdateLock(MyTeam, CorePosition, Time.fixedDeltaTime);
 
             //ターゲット切替えボタンが押されていればターゲットを切替え
             if (TargetChangePressed)
@@ -112,15 +121,15 @@ namespace StaTSpace
             }
             else
             {
-                ModNetworking.SendToHost(StaTMessageController.CurrentAimingMessageType.CreateMessage(MyPlayerID, CurrentAimID, CurrentAimTier()));
+                ModNetworking.SendToHost(StaTMessageController.CurrentAimingMessageType.CreateMessage(MyPlayerID, CurrentAimID, CurrentAimState()));
             }
         }
 
         /// <summary>
         /// ロック可能範囲内にいるか判定する関数
         /// </summary>
-        public bool InRegion(int id, Vector3 corePos, Vector3 camForward,
-              out float sqrDistance, out float foward)
+        public bool InRegion(int id, Vector3 corePos,
+              out float sqrDistance)
         {
             //IFFDictからBBを取得
             BlockBehaviour iffBB = IFFDict[id].BlockBehaviour;
@@ -130,14 +139,19 @@ namespace StaTSpace
             sqrDistance = Vector3.Dot(DistanceVector, DistanceVector);
 
             // 1. 距離(最も安価)
-            if (sqrDistance > StaTTargetConfig.maxRange) { foward = 0f; return false; }
+            if (sqrDistance > StaTTargetConfig.maxRange)
+            {
+                return false;
+            }
 
-            // 2. 前方判定（カメラ方向との内積が0以上）
-            foward = Vector3.Dot(camForward, DistanceVector);
-            if (foward <= 0f) return false;
+            // 2. 前方判定（WorldToScreenPointのz座標が0以上）
+            if (MainCamera.WorldToScreenPoint(iffBB.transform.position).z < 0)
+            {
+                return false;
+            }
 
             // 3. ビューポート矩形（0.5-幅 ≦ ビューポート座標x ≦ 0.5+幅 かつ 0.5-高さ ≦ ビューポート座標y ≦ 0.5+高さ の時のみtrue）
-            Vector3 viewPortVector = Camera.main.WorldToViewportPoint(iffBB.transform.position);
+            Vector3 viewPortVector = MainCamera.WorldToViewportPoint(iffBB.transform.position);
             return viewPortVector.x >= 0.5f - StaTTargetConfig.LockAreaWidth && viewPortVector.x <= 0.5f + StaTTargetConfig.LockAreaWidth
                 && viewPortVector.y >= 0.5f - StaTTargetConfig.LockAreaHeight && viewPortVector.y <= 0.5f + StaTTargetConfig.LockAreaHeight;
         }
@@ -145,7 +159,7 @@ namespace StaTSpace
         /// <summary>
         /// 各IFFのロックオン状態を更新する関数
         /// </summary>
-        public void UpdateLock(MPTeam team, Vector3 corePos, Vector3 camForward, float dt)
+        public void UpdateLock(MPTeam team, Vector3 corePos, float dt)
         {
             if(!IFFTeamListDict.ContainsKey(team))
             {
@@ -168,9 +182,8 @@ namespace StaTSpace
 
                 //距離とカメラ方向との内積, ロックオン領域内か判定する関数でも使う
                 float sqrDistance;
-                float foward;
                 //ロック可能範囲内か
-                bool inRegion = InRegion(id, corePos, camForward, out sqrDistance, out foward);
+                bool inRegion = InRegion(id, corePos, out sqrDistance);
 
                 //各リスト内にいるか
                 bool wasPrimary = PrimaryLockedList.Contains(id);
@@ -183,9 +196,18 @@ namespace StaTSpace
                     if (!wasPrimary && !wasSecondary)
                     {
                         PrimaryLockedList.Add(id); // 一次ロック即時完了
-                        SecondaryLockingTimerDict[id] = Mathf.Clamp(StaTTargetConfig.LockTimeProportional * sqrDistance + StaTTargetConfig.LockTimeConstant, StaTTargetConfig.minLockTime, StaTTargetConfig.maxLockTime);
+                        float lockTime = Mathf.Clamp(StaTTargetConfig.LockTimeProportional * sqrDistance + StaTTargetConfig.LockTimeConstant, StaTTargetConfig.minLockTime, StaTTargetConfig.maxLockTime);
+                        SecondaryLockingTimerDict[id] = lockTime;
 
-                        Mod.Log("PrimaryLocked " + id.ToString());
+                        Mod.Log("SqrDistance is " + sqrDistance + ", LockTime is " + lockTime.ToString());
+
+                        //そのIFFにロック状態を通知
+                        iffEntry.LockState = StaTLockState.Primary;
+                        iffEntry.IFFBehaviour.lockTime = lockTime;
+                        iffEntry.IFFBehaviour.LockStateChanged(StaTLockState.Primary);
+
+                        AutoReselect();
+                        
                     }
                     //二次ロック済にいる場合
                     else if (wasSecondary)
@@ -205,7 +227,11 @@ namespace StaTSpace
                                 PrimaryLockedList.Remove(id);
                                 SecondaryLockedList.Add(id); // 二次ロック完了
 
-                                Mod.Log("SecondaryLocked " + id.ToString());
+                                iffEntry.LockState = StaTLockState.Secondary;
+                                iffEntry.IFFBehaviour.LockStateChanged(StaTLockState.Secondary);
+
+                                AutoReselect();
+
                             }
                             else
                             {
@@ -217,7 +243,8 @@ namespace StaTSpace
                 //ロック可能範囲外の場合はロックオン済およびロックオン中から外す
                 else if (wasPrimary || wasSecondary)
                 {
-                    Mod.Log(id.ToString() + " is now no Locked");
+                    iffEntry.LockState = StaTLockState.None;
+                    iffEntry.IFFBehaviour.LockStateChanged(StaTLockState.None);
 
                     //一次ロックの場合は一次ロックと二次ロック準備中のリストから外す
                     PrimaryLockedList.Remove(id);
@@ -241,16 +268,16 @@ namespace StaTSpace
         /// <summary>
         /// 現在照準中の敵が何次ロックか
         /// </summary>
-        private StaTLockTier CurrentAimTier()
+        private StaTLockState CurrentAimState()
         {
             //何もロックしてなければ0
-            if(LockingSomething)
+            if(!LockingSomething)
             {
                 return 0;
             }
 
             //二次ロック済リストにあれば二次ロック、なければ一次ロック
-            return SecondaryLockedList.Contains(CurrentAimID) ? StaTLockTier.Secondary : StaTLockTier.Primary;
+            return SecondaryLockedList.Contains(CurrentAimID) ? StaTLockState.Secondary : StaTLockState.Primary;
         }
 
         /// <summary>
@@ -262,15 +289,36 @@ namespace StaTSpace
         }
 
         /// <summary>
-        /// 照準対象を自動で切替えさせる関数
+        /// 照準対象を自動で０番に切替える関数
         /// </summary>
         public void AutoReselect()
         {
             var order = CombinedOrder();
-            if(order.Count > 0)
+
+            //変更不要ならここで抜ける（状態を一切いじらない）
+            if (order.Count > 0 && CurrentAimID == order[0])
+            {
+                return;
+            }
+
+            //古い方のIFFがまだ存在するなら被照準状態を解除（死んでいて存在しない場合は何もしない）
+            IFFEntry oldIFFEntry;
+            if (IFFDict.TryGetValue(CurrentAimID, out oldIFFEntry))
+            {
+                oldIFFEntry.CurrentAiming = false;
+                oldIFFEntry.IFFBehaviour.CurrentAimingChanged(false);
+            }
+
+            if (order.Count > 0)
             {
                 CurrentAimID = order[0];    //二次→一次
                 CurrentOrder = 0;
+                LockingSomething = true;
+
+                //新しい方のIFFを被照準状態に
+                IFFEntry newIFFEntry = IFFDict[CurrentAimID];
+                newIFFEntry.CurrentAiming = true;
+                newIFFEntry.IFFBehaviour.CurrentAimingChanged(true);
             }
             else
             {
@@ -291,12 +339,25 @@ namespace StaTSpace
             {
                 return; 
             }
+            else if(order.Count == 1)
+            {
+                return;
+            }
             else
             {
+                //古い方のIFFの被照準状態を解除
+                IFFEntry oldIFFEntry = IFFDict[CurrentAimID];
+                oldIFFEntry.CurrentAiming = false;
+                oldIFFEntry.IFFBehaviour.CurrentAimingChanged(false);
+
                 //オーダーを1進めて、オーダー表内の個数で割った値を新たにオーダーとする。例：3個ロックオン中、オーダーが2（3番目）の場合 → オーダー = (2+1)%3 = 0
                 CurrentOrder = (CurrentOrder + 1) % order.Count;
-
                 CurrentAimID = order[CurrentOrder];
+
+                //新しい方のIFFを被照準状態に
+                IFFEntry newIFFEntry = IFFDict[CurrentAimID];
+                newIFFEntry.CurrentAiming = true;
+                newIFFEntry.IFFBehaviour.CurrentAimingChanged(true);
             }
             
         }
@@ -322,7 +383,7 @@ namespace StaTSpace
     /// <summary>
     /// 何次ロックか
     /// </summary>
-    public enum StaTLockTier
+    public enum StaTLockState
     {
         None = 0,
         Primary = 1,

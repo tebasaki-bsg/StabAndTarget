@@ -14,18 +14,18 @@ namespace StaTSpace
     {
         //ロックオン可能距離, ロックオン可能範囲
         internal static float maxRange = 1200f * 1200f;
-        internal static float lockAreaWidth = 0.18f;
+        internal static float lockAreaWidth = 0.22f;
         internal static float lockAreaHeight = 0.32f;
 
         //ロックオンの所要時間の最小・最大とその時の距離、これ以上/以下は所用時間が固定となる
         internal static float minLockTime = 0.3f;
-        internal static float minLockTimeRange = 50f * 50f;
-        internal static float maxLockTime = 1.5f;
-        internal static float maxLockTimeRange = 1000f * 1000f;
+        internal static float minLockTimeRangeSqr = 50f * 50f;
+        internal static float maxLockTime = 1.0f;
+        internal static float maxLockTimeRangeSqr = 1000f * 1000f;
 
         //ロックオンの所要時間を計算するための定数, （ロックオン所要時間) = LockTimeProportional * (距離)^2 + LockTimeConstant
-        internal static float LockTimeProportional = 100 * (maxLockTime - minLockTime) / (minLockTimeRange * minLockTimeRange + maxLockTimeRange * maxLockTimeRange);
-        internal static float LockTimeConstant = 100 * minLockTime - 100 * minLockTimeRange * minLockTimeRange * (maxLockTime - minLockTime) / (minLockTimeRange * minLockTimeRange + maxLockTimeRange * maxLockTimeRange);
+        internal static float LockTimeProportional = (maxLockTime - minLockTime) / (minLockTimeRangeSqr + maxLockTimeRangeSqr);
+        internal static float LockTimeConstant = minLockTime - minLockTimeRangeSqr * (maxLockTime - minLockTime) / (minLockTimeRangeSqr + maxLockTimeRangeSqr);
 
         //各定数のゲッター
         public static float MaxRange
@@ -64,7 +64,7 @@ namespace StaTSpace
         {
             get
             {
-                return minLockTimeRange;
+                return Mathf.Sqrt(minLockTimeRangeSqr);
             }
         }
 
@@ -80,13 +80,13 @@ namespace StaTSpace
         {
             get
             {
-                return maxLockTimeRange;
+                return Mathf.Sqrt(maxLockTimeRangeSqr);
             }
         }
 
         public static void ChangeMaxRange(float value)
         {
-            if(maxLockTimeRange > value)
+            if(Mathf.Sqrt(maxLockTimeRangeSqr) > value)
             {
                 Mod.Error("MaxRange must be smaller than MaxLockTimeRange. You must change MaxLockTimeRange before.");
             }
@@ -110,12 +110,12 @@ namespace StaTSpace
         public static void ChangeLockSpeed(float minTime, float minRange, float maxTime, float maxRange)
         {
             minLockTime = minTime;
-            minLockTimeRange = minRange;
+            minLockTimeRangeSqr = minRange * minRange;
             maxLockTime = maxTime;
-            maxLockTimeRange = maxRange;
+            maxLockTimeRangeSqr = maxRange * maxRange;
 
-            LockTimeProportional = 100 * (maxTime - minTime) / (minRange * minRange + maxRange * maxRange);
-            LockTimeConstant = 100 * minTime - 100 * minRange * minRange * (maxTime - minTime) / (minRange * minRange + maxRange * maxRange);
+            LockTimeProportional = (maxTime - minTime) / (minRange * minRange + maxRange * maxRange);
+            LockTimeConstant = minTime - minRange * minRange * (maxTime - minTime) / (minRange * minRange + maxRange * maxRange);
 
         }
     }

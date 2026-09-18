@@ -19,9 +19,12 @@ namespace StaTSpace
         /// </summary>
         public static void SimulationStartInit()
         {
-            var playerTargetingInfo = new PlayerTargetingInfo { };
+            PlayerTargetingInfoList = new List<PlayerTargetingInfo>();
 
-            PlayerTargetingInfoList = Enumerable.Repeat(playerTargetingInfo, 20).ToList();
+            for (int i = 0; i < 20; i++)
+            {
+                PlayerTargetingInfoList.Add(new PlayerTargetingInfo());
+            }
         }
 
         public static void PrimaryChanged(int playerID, List<int> primaryList)
