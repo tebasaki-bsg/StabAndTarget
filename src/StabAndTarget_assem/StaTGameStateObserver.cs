@@ -33,6 +33,8 @@ namespace StaTSpace
 
                 StatTIFFIDRegister.ClearDictionary();
                 StaTTargetController.init = false;
+
+                StatTStabIDContoroller.ClearDictionary();
             }
         }
     }

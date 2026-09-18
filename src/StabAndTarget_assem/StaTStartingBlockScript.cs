@@ -31,6 +31,8 @@ namespace StaTSpace
         public Sprite LockAreaIcon;
         public Image LockAreaImage;
 
+        public Camera MainCamera = Camera.main;
+
         //シミュ開始時ならば各種情報を登録
         public void Awake()
         {
@@ -96,15 +98,12 @@ namespace StaTSpace
                 {
                     StaTTargetController.SimulationStartInit();
                     StaTTargetControllerHost.SimulationStartInit();
-
-                    Mod.Log("IFFDict has " + StaTTargetController.IFFDict.Count.ToString());
-                    Mod.Log("IFFTeamListDict has " + StaTTargetController.IFFTeamListDict[StaTTargetController.MyTeam].Count.ToString());
                 }
             }
         }
 
         /// <summary>
-        /// シミュ中は毎フレームCorePosition, CamForward, CoreSpeedを更新
+        /// シミュ中は毎フレームCorePosition, CoreSpeedを更新
         /// </summary>
         public void Update()
         {

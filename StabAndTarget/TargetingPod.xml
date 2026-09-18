@@ -26,7 +26,7 @@
 	<Name>Targeting Pod</Name>
 	
 	<!-- TODO: Change the mass to something appropriate -->
-	<Mass>0.6</Mass>
+	<Mass>1.0</Mass>
 	
 	<!-- Additional keywords that can be used to search for this block
 		 in the search tab of the block bar.
@@ -65,14 +65,22 @@
 		 and mods can also add new modules.
 		 Check the documentation for more information on how to use modules. -->
 	<ModuleMapperTypes>
-		<Slider displayName="ID" key="stab-id" min="0" max="100" default="0" unclamped="true"/>
+		<Key displayName="Activate" key="activate-targetingpod" default="C" />
+		<Slider displayName="Max Distance" key="targetingpod-max-distance" min="0" max="2000" default="1000" unclamped="false"/>
+		<Slider displayName="Bullet Speed" key="targetingpod-bulletspeed" min="0" max="2000" default="800" unclamped="true"/>
+		<Slider displayName="Power" key="targetingpod-power" min="0" max="100" default="10" unclamped="true"/>
+		
 	</ModuleMapperTypes>
 
 	<Modules>
-		<StaTStabBaseBlockModule modid="535315b3-705a-4f03-94c3-51584dff3863">
+		<StaTTargetingPodBlockModule modid="535315b3-705a-4f03-94c3-51584dff3863">
 			<!-- XmlElement("AA") key="bb" /  Slider displayName="CC" key="bb" /  AA key="bb"-->
-			<StabIDSlider key="stab-id" />
-		</StaTStabBaseBlockModule>
+			<MaxDistanceSlider key="targetingpod-max-distance" />
+			<BulletSpeedSlider key="targetingpod-bulletspeed" />
+			<PowerSlider key="targetingpod-power" />
+			<ActivateKey key="activate-targetingpod" />
+			
+		</StaTTargetingPodBlockModule>
 	</Modules>
 	
 	<!-- Include to make block take damage. -->
@@ -165,6 +173,10 @@
 	</BasePoint>
 	
 	<AddingPoints>
-		
+		<AddingPoint>
+			<Position x="0.0" y="0.0" z="0.5" />
+			<Rotation x="0.0" y="0.0" z="0.0" />
+			<Stickiness enabled="true" radius="0.2"/>
+		</AddingPoint>
 	</AddingPoints>
 </Block>

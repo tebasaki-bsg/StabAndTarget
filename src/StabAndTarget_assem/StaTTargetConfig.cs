@@ -13,7 +13,7 @@ namespace StaTSpace
     public static class StaTTargetConfig
     {
         //ロックオン可能距離, ロックオン可能範囲
-        internal static float maxRange = 1200f * 1200f;
+        internal static float maxRange = 1000f * 1000f;
         internal static float lockAreaWidth = 0.22f;
         internal static float lockAreaHeight = 0.32f;
 
@@ -21,7 +21,7 @@ namespace StaTSpace
         internal static float minLockTime = 0.3f;
         internal static float minLockTimeRangeSqr = 50f * 50f;
         internal static float maxLockTime = 1.0f;
-        internal static float maxLockTimeRangeSqr = 1000f * 1000f;
+        internal static float maxLockTimeRangeSqr = 800f * 800f;
 
         //ロックオンの所要時間を計算するための定数, （ロックオン所要時間) = LockTimeProportional * (距離)^2 + LockTimeConstant
         internal static float LockTimeProportional = (maxLockTime - minLockTime) / (minLockTimeRangeSqr + maxLockTimeRangeSqr);

@@ -72,6 +72,7 @@ namespace StaTSpace
 			Modding.Modules.CustomModules.AddBlockModule<StaTStabBaseBlockModule, StaTStabBaseBlockModuleBehaviour>("StaTStabBaseBlockModule", true);
 			Modding.Modules.CustomModules.AddBlockModule<StaTStabSlaveBlockModule, StaTStabSlaveBlockModuleBehaviour>("StaTStabSlaveBlockModule", true);
 			Modding.Modules.CustomModules.AddBlockModule<StaTIFFBlockModule, StaTIFFBlockModuleBehaviour>("StaTIFFBlockModule", true);
+			Modding.Modules.CustomModules.AddBlockModule<StaTTargetingPodBlockModule, StaTTargetingPodBlockModuleBehaviour>("StaTTargetingPodBlockModule", true);
 
 			StaTMessageController.SetUpMessage();
 		}

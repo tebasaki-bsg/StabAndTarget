@@ -41,7 +41,7 @@ namespace StaTSpace
 
         /// <summary>
         /// 辞書を消す関数。
-        /// StabBaseModuleBehaviour.OnSimulateStop から呼ぶ。
+        /// GameStateObserverがシミュ停止時に呼ぶ。
         /// </summary>
         public static void ClearDictionary()
         {

@@ -47,7 +47,7 @@ namespace StaTSpace
             ModNetworking.Callbacks[CurrentAimingMessageType] += new Action<Message>(OnCurrentAimingReceived);
 
             //n番のプレイヤーのカメラ方向
-            CurrentCameraMessageType = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3);
+            CurrentCameraMessageType = ModNetworking.CreateMessageType(DataType.Integer, DataType.Vector3, DataType.Vector3);
             ModNetworking.Callbacks[CurrentCameraMessageType] += new Action<Message>(OnCurrentCameraReceived);
         }
 
@@ -76,19 +76,32 @@ namespace StaTSpace
             StaTTargetControllerHost.SecondaryChanged(PlayerID, SecondaryList);
         }
 
-        //クライアントからロック中の対象が毎フレーム送られる。何もロックしていない時はカメラ座標が別メッセージで代わりに送られる。
+        //クライアントからロック中の対象が毎フレーム送られる。何もロックしていない時はカメラの座標と向きが別メッセージで代わりに送られる。
         private static void OnCurrentAimingReceived(Message message)
         {
-            int PlayerID = (int)message.GetData(0);
-            int SessionID = (int)message.GetData(1);
-            StaTLockState LockTier = (StaTLockState)message.GetData(2);
+            int playerID = (int)message.GetData(0);
+            int sessionID = (int)message.GetData(1);
+            StaTLockState lockState = (StaTLockState)message.GetData(2);
+
+            var info = StaTTargetControllerHost.PlayerTargetingInfoList[playerID];
+            info.LockingSomething = true;
+            info.CurrentAimID = sessionID;
+            info.LockState = lockState;
+            info.CurrentAimRigidbody = StaTTargetController.IFFDict[playerID].Rigidbody;
+
         }
 
-        //クライアントが何もロックしていない時はカメラ座標が送られる。
+        //クライアントが何もロックしていない時はカメラの座標と向きが送られる。
         private static void OnCurrentCameraReceived(Message message)
         {
-            int PlayerID = (int)message.GetData(0);
-            Vector3 CameraForward = (Vector3)message.GetData(1);
+            int playerID = (int)message.GetData(0);
+            Vector3 camPosition = (Vector3)message.GetData(1);
+            Vector3 camForward = (Vector3)message.GetData(2);
+
+            var info = StaTTargetControllerHost.PlayerTargetingInfoList[playerID];
+            info.LockingSomething = false;
+            info.CamPosition = camPosition;
+            info.CamForward = camForward;
         }
     }
 }

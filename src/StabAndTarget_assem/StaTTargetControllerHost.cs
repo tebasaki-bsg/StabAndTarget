@@ -40,10 +40,13 @@ namespace StaTSpace
 
     public class PlayerTargetingInfo
     {
+        public Vector3 CamPosition;
         public Vector3 CamForward;
 
         public bool LockingSomething;
         public int CurrentAimID;
+        public StaTLockState LockState;
+        public Rigidbody CurrentAimRigidbody;
 
         public List<int> PrimaryLockedList = new List<int>();
 

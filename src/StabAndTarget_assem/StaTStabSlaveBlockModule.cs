@@ -65,7 +65,7 @@ namespace StaTSpace
             base.SafeAwake();
 
             //P成分・D成分を調整する用のトグルを作る
-            AppearPDConfigToggle = BlockBehaviour.AddToggle(Mod.isJapanese ? "詳細設定" : "PD config", "pd-config", false);
+            AppearPDConfigToggle = BlockBehaviour.AddToggle(Mod.isJapanese ? "設定を変更" : "PD config", "pd-config", false);
             AppearPDConfigToggle.DisplayInMapper = true;
             AppearPDConfigToggle.Toggled += AppearPDConfig;
 
@@ -92,8 +92,16 @@ namespace StaTSpace
 
             ActivateKey = GetKey(Module.ActivateKey);
 
-            proportional = ProportionalSlider.Value;
-            derivative = DerivativeSlider.Value;
+            if (AppearPDConfigToggle.IsActive)
+            {
+                proportional = ProportionalSlider.Value;
+                derivative = DerivativeSlider.Value;
+            }
+            else
+            {
+                proportional = power;
+                derivative = power * 0.9f;
+            }
 
             MasterIDString = masterID.ToString() + "_" + BlockPlayerID.ToString();
 

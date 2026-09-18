@@ -54,6 +54,7 @@ namespace StaTSpace
         public static MPTeam MyTeam = MPTeam.None;    //シミュ開始時にコアブロックから指定
 
         public static Vector3 CorePosition; //コアブロックの座標
+        public static Vector3 CamPosition;
         public static Vector3 CamForward;   //プレイヤーのカメラ方向
         public static bool TargetChangePressed = false;  //ターゲット切替えキーが押されたかの確認, キーはコアブロックにある
 
@@ -72,6 +73,10 @@ namespace StaTSpace
         /// </summary>
         public static void SimulationStartInit()
         {
+            CurrentAimID = 10000;
+            CurrentOrder = 0;
+            LockingSomething = false;
+
             var localPlayer = Player.GetLocalPlayer();
             MyPlayerID = localPlayer.NetworkId;
 
@@ -93,6 +98,7 @@ namespace StaTSpace
                 return;
             }
 
+            CamPosition = MainCamera.transform.position;
             CamForward = MainCamera.transform.forward;
 
             //各IFFのロックオン状態を更新
@@ -105,24 +111,45 @@ namespace StaTSpace
                 TargetChangePressed = false;
             }
             
-            //マルチじゃない or ホスト or ローカルシミュ の場合は送信の必要が無いためここで切り上げ
+            //マルチじゃない or ホスト or ローカルシミュ
             if (!StatMaster.isMP || StatMaster.isHosting || StatMaster.isLocalSim)
             {
-                return;
-            }
+                if(!LockingSomething)
+                {
+                    var info = StaTTargetControllerHost.PlayerTargetingInfoList[MyPlayerID];
+                    info.LockingSomething = false;
+                    info.CamPosition = CamPosition;
+                    info.CamForward = CamForward;
+                }
+                else
+                {
+                    var info = StaTTargetControllerHost.PlayerTargetingInfoList[MyPlayerID];
+                    info.LockingSomething = true;
+                    info.CurrentAimID = CurrentAimID;
+                    info.LockState = CurrentAimState();
+                    info.CurrentAimRigidbody = IFFDict[CurrentAimID].Rigidbody;
+                }
 
-            //ロック済リストが更新されていればホストに送信
-            SendLockListsIfChanged();
-            
-            //何もロックして無ければカメラ方向、ロックしていれば照準中の対象をホストに送信
-            if (!LockingSomething)
-            {
-                ModNetworking.SendToHost(StaTMessageController.CurrentCameraMessageType.CreateMessage(MyPlayerID, CamForward));
+
+
             }
             else
             {
-                ModNetworking.SendToHost(StaTMessageController.CurrentAimingMessageType.CreateMessage(MyPlayerID, CurrentAimID, CurrentAimState()));
+                //ロック済リストが更新されていればホストに送信
+                SendLockListsIfChanged();
+
+                //何もロックして無ければカメラ方向、ロックしていれば照準中の対象をホストに送信
+                if (!LockingSomething)
+                {
+                    ModNetworking.SendToHost(StaTMessageController.CurrentCameraMessageType.CreateMessage(MyPlayerID, CamPosition, CamForward));
+                }
+                else
+                {
+                    ModNetworking.SendToHost(StaTMessageController.CurrentAimingMessageType.CreateMessage(MyPlayerID, CurrentAimID, CurrentAimState()));
+                }
             }
+
+            
         }
 
         /// <summary>
@@ -198,8 +225,6 @@ namespace StaTSpace
                         PrimaryLockedList.Add(id); // 一次ロック即時完了
                         float lockTime = Mathf.Clamp(StaTTargetConfig.LockTimeProportional * sqrDistance + StaTTargetConfig.LockTimeConstant, StaTTargetConfig.minLockTime, StaTTargetConfig.maxLockTime);
                         SecondaryLockingTimerDict[id] = lockTime;
-
-                        Mod.Log("SqrDistance is " + sqrDistance + ", LockTime is " + lockTime.ToString());
 
                         //そのIFFにロック状態を通知
                         iffEntry.LockState = StaTLockState.Primary;

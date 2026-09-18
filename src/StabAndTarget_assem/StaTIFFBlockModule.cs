@@ -269,7 +269,7 @@ namespace StaTSpace
                 }
                 else
                 {
-                    ColorChange(StaTLockState.None);
+                    ColorChange(lockState);
                 }
 
                 UIColorInit = true;
@@ -380,16 +380,18 @@ namespace StaTSpace
             LockIconObject.SetActive(value);
         }
 
-        public void ColorChange(StaTLockState lockState)
+        public void ColorChange(StaTLockState sendedLockState)
         {
+            lockState = sendedLockState;
+
             IFFImage.color = LockStateColors[lockState];
             LockImage.color = LockStateColors[lockState];
         }
 
         public void ColorChangeAlert()
         {
-            IFFImage.color = LockStateColors[lockState];
-            LockImage.color = LockStateColors[lockState];
+            IFFImage.color = AlertColor;
+            LockImage.color = AlertColor;
         }
     }
 }

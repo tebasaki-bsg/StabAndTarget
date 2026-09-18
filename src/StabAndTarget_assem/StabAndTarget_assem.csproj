@@ -68,6 +68,7 @@
     <Compile Include="StaTTargetConfig.cs" />
     <Compile Include="StaTTargetController.cs" />
     <Compile Include="StaTTargetControllerHost.cs" />
+    <Compile Include="StaTTargetingPodBlockModule.cs" />
     <Compile Include="StatTIFFIDRegister.cs" />
     <Compile Include="StatTStabIDContoroller.cs" />
   </ItemGroup>

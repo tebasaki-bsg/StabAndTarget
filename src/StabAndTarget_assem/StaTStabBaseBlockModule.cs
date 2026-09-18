@@ -46,16 +46,5 @@ namespace StaTSpace
             //ID登録命令、こちらは一意に定まるためホストクライアント両方が行い、通信等は行わない
             StatTStabIDContoroller.RegisterStabBase(BlockBehaviour, stabID, BlockPlayerID);
         }
-
-        //シミュ停止時かつリスポ等でない⇒辞書を削除
-        public override void OnSimulateStop()
-        {
-            base.OnSimulateStop();
-
-            if(!StatMaster.levelSimulating)
-            {
-                StatTStabIDContoroller.ClearDictionary();
-            }
-        }
     }
 }
