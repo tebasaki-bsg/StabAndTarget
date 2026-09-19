@@ -105,8 +105,6 @@ namespace StaTSpace
                         Instance = this;
                     }
                 }
-
-                
             }
         }
 

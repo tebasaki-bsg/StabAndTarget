@@ -57,11 +57,11 @@ namespace StaTSpace
         public static Vector3 CamPosition;
         public static Vector3 CamForward;   //プレイヤーのカメラ方向
         public static bool TargetChangePressed = false;  //ターゲット切替えキーが押されたかの確認, キーはコアブロックにある
+        public static Camera MainCamera;
 
         private List<int> LastSentPrimary = new List<int>();    //最後にホストに送信したリスト
         private List<int> LastSentSecondary = new List<int>();    //最後にホストに送信したリスト
-        private Camera MainCamera = Camera.main;
-
+        
         public void Awake()
         {
             Instance = this;
@@ -79,6 +79,8 @@ namespace StaTSpace
 
             var localPlayer = Player.GetLocalPlayer();
             MyPlayerID = localPlayer.NetworkId;
+
+            MainCamera = Camera.main;
 
             init = true;
         }
@@ -98,8 +100,17 @@ namespace StaTSpace
                 return;
             }
 
-            CamPosition = MainCamera.transform.position;
-            CamForward = MainCamera.transform.forward;
+            try
+            {
+                CamPosition = MainCamera.transform.position;
+                CamForward = MainCamera.transform.forward;
+            }
+            catch
+            {
+                Mod.Log("Failed to get transform");
+                return;
+            }
+            
 
             //各IFFのロックオン状態を更新
             UpdateLock(MyTeam, CorePosition, Time.fixedDeltaTime);

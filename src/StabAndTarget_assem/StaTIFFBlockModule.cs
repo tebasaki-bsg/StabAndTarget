@@ -360,7 +360,7 @@ namespace StaTSpace
             NameRect.sizeDelta = new Vector2(350f, 100f);
             NameRect.anchorMin = new Vector2(0.5f, 0.5f);
             NameRect.anchorMax = new Vector2(0.5f, 0.5f);
-            NameRect.anchoredPosition = new Vector2(270, 60);
+            NameRect.anchoredPosition = new Vector2(270, 65);
             NameRect.localScale = Vector3.one;
 
             NameUIText = NameIconObject.GetComponent<Text>();

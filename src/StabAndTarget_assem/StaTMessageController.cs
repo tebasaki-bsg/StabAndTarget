@@ -62,6 +62,11 @@ namespace StaTSpace
 
         private static void OnPrimaryChangeReceived(Message message)
         {
+            if(!StaTGameStateObserver.IsSimulating)
+            {
+                return;
+            }
+
             int PlayerID = (int)message.GetData(0);
             List<int> PrimaryList = new List<int> ((int[])message.GetData(1));
 
@@ -70,6 +75,11 @@ namespace StaTSpace
 
         private static void OnSecondaryChangeReceived(Message message)
         {
+            if (!StaTGameStateObserver.IsSimulating)
+            {
+                return;
+            }
+
             int PlayerID = (int)message.GetData(0);
             List<int> SecondaryList = new List<int>((int[])message.GetData(1));
 
@@ -79,6 +89,11 @@ namespace StaTSpace
         //クライアントからロック中の対象が毎フレーム送られる。何もロックしていない時はカメラの座標と向きが別メッセージで代わりに送られる。
         private static void OnCurrentAimingReceived(Message message)
         {
+            if (!StaTGameStateObserver.IsSimulating)
+            {
+                return;
+            }
+
             int playerID = (int)message.GetData(0);
             int sessionID = (int)message.GetData(1);
             StaTLockState lockState = (StaTLockState)message.GetData(2);
@@ -94,6 +109,11 @@ namespace StaTSpace
         //クライアントが何もロックしていない時はカメラの座標と向きが送られる。
         private static void OnCurrentCameraReceived(Message message)
         {
+            if (!StaTGameStateObserver.IsSimulating)
+            {
+                return;
+            }
+
             int playerID = (int)message.GetData(0);
             Vector3 camPosition = (Vector3)message.GetData(1);
             Vector3 camForward = (Vector3)message.GetData(2);
