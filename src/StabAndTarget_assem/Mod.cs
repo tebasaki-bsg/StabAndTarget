@@ -82,6 +82,22 @@ namespace StaTSpace
 
 			StaTMessageController.SetUpMessage();
 		}
+
+		/// <summary>
+		/// Vector3.SignedAngleの代替関数（Unity 5.4に無いため自作）
+		/// fromからtoへの角度を、axisを基準に符号付き（-180～180度）で返す
+		/// </summary>
+		public static float SignedAngle(Vector3 from, Vector3 to, Vector3 axis)
+		{
+			// まず符号なしの角度を求める（0～180度）
+			float unsignedAngle = Vector3.Angle(from, to);
+
+			// 符号を決める：from × to（外積）が axis と同じ向きか逆向きか
+			Vector3 cross = Vector3.Cross(from, to);
+			float sign = Mathf.Sign(Vector3.Dot(cross, axis));
+
+			return unsignedAngle * sign;
+		}
 	}
 
 	/// <summary>

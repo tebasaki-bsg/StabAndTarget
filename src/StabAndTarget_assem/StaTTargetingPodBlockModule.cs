@@ -59,14 +59,16 @@ namespace StaTSpace
         public PlayerTargetingInfo playerTargetingInfo;
 
         public LayerMask layerMask = (1 << 0) | (1 << 12) | (1 << 14) | (1 << 25) | (1 << 26);
+        public LayerMask addingPointLayerMask = (1 << 12);
 
         public ConfigurableJoint Joint;
+        public bool NoConnected;
 
-        // === ゼロ点（ジョイント初期化時のワールド姿勢）===
-        private Quaternion zeroWorldRotation;
+        private Quaternion zeroWorldRotation;        // 砲塔の初期ワールド姿勢
+        private Quaternion zeroConnectedRotation;    // 接続元（機体）の初期ワールド姿勢
 
         // 射角限界（±60°）
-        public float angleLimit = 60f;
+        public float angleLimit = 75f;
 
         public override void SafeAwake()
         {
@@ -116,44 +118,22 @@ namespace StaTSpace
 
             // ジョイント初期化時のブロックのワールド姿勢を基準として保存
             zeroWorldRotation = rigidbody.rotation;
+            //zeroConnectedRotation = Joint.connectedBody.rotation;  // 機体の初期姿勢も記録
+            NoConnected = GetConnectedRotation(out zeroConnectedRotation);
+
 
             BlockPlayerID = BlockBehaviour.ParentMachine.PlayerID;
             playerTargetingInfo = StaTTargetControllerHost.PlayerTargetingInfoList[BlockPlayerID];
-        }
-
-        /// <summary>
-        /// Jointを設定する関数（全軸ワールド基準、ロール固定、JointDrive）
-        /// </summary>
-        public void SetupJoint()
-        {
-            // ピッチ(X)・ヨー(Y)は自由、ロール(Z)は固定
-            Joint.angularXMotion = ConfigurableJointMotion.Free;   // ピッチ
-            Joint.angularYMotion = ConfigurableJointMotion.Free;   // ヨー
-            Joint.angularZMotion = ConfigurableJointMotion.Free; // ロール固定
-
-            Joint.secondaryAxis = new Vector3(0f, 1f, 0f);
-
-            // 全軸ワールド座標基準
-            Joint.configuredInWorldSpace = true;
-
-            // Slerpで全回転をまとめて制御
-            Joint.rotationDriveMode = RotationDriveMode.Slerp;
-
-            // JointDrive（positionSpring=P項, positionDamper=D項）
-            JointDrive drive = new JointDrive
-            {
-                positionSpring = proportional,
-                positionDamper = derivative,
-                maximumForce = Mathf.Infinity
-            };
-            Joint.slerpDrive = drive;
         }
 
         public override void SimulateFixedUpdateHost()
         {
             base.SimulateFixedUpdateHost();
 
-            if (Joint == null) return;
+            if (Joint == null)
+            {
+                return;
+            }
 
             // キーが押されているときのみ照準
             if (ActivateKey.IsHeld || ActivateKey.EmulationHeld())
@@ -181,26 +161,135 @@ namespace StaTSpace
         }
 
         /// <summary>
-        /// 狙う方向へJointのtargetRotationを設定する関数（ワールド基準）
+        /// Jointを設定する関数（全軸ワールド基準、ロール固定、JointDrive）
+        /// </summary>
+        public void SetupJoint()
+        {
+            // ピッチ(X)・ヨー(Y)は自由、ロール(Z)は固定
+            Joint.angularXMotion = ConfigurableJointMotion.Free;   // ピッチ
+            Joint.angularYMotion = ConfigurableJointMotion.Free;   // ヨー
+            Joint.angularZMotion = ConfigurableJointMotion.Free; // ロール固定
+
+            Joint.axis = Vector3.right;          // (1, 0, 0)
+            Joint.secondaryAxis = new Vector3(0f, 1f, 0f);
+
+            // 全軸ワールド座標基準
+            Joint.configuredInWorldSpace = true;
+
+            // Slerpで全回転をまとめて制御
+            Joint.rotationDriveMode = RotationDriveMode.Slerp;
+
+            // JointDrive（positionSpring=P項, positionDamper=D項）
+            JointDrive drive = new JointDrive
+            {
+                positionSpring = proportional,
+                positionDamper = derivative,
+                maximumForce = Mathf.Infinity
+            };
+            Joint.slerpDrive = drive;
+        }
+
+        public bool GetConnectedRotation(out Quaternion connectedRotation)
+        {
+            Rigidbody hitRigidbody;
+
+            //根本接続判定と同じ大きさの球で判定を取る
+            Collider[] hitColliders = Physics.OverlapSphere(transform.position, Mathf.Max(transform.localScale.x, transform.localScale.y, transform.localScale.z) * 0.16f, addingPointLayerMask);
+            
+            if(hitColliders.Length == 0)
+            {
+                connectedRotation = Quaternion.identity;
+                return false;
+            }
+            else
+            {
+                foreach (Collider col in hitColliders)
+                {
+                    GameObject go = col.gameObject;
+
+                    //3つ上の階層まで探る
+                    for (int i = 0; i < 3; i++)
+                    {
+                        hitRigidbody = go.GetComponent<Rigidbody>();
+
+                        if(hitRigidbody != null && hitRigidbody != rigidbody)
+                        {
+                            connectedRotation = hitRigidbody.rotation;
+
+                            return true;
+                        }
+
+                        go = go.transform.parent.gameObject;
+
+                        //マシン全体の親まで来たらそのコライダーは無視
+                        if(go.name == "Simulation Machine")
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                connectedRotation = Quaternion.identity;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 目標ワールド姿勢を、機体（接続元）の姿勢を基準とした相対回転に変換してtargetRotationに設定する。
+        /// 機体の初期姿勢と現在姿勢の両方を基準変換に含めることで、
+        /// 機体がどんな姿勢（大きな傾きを含む）でも正しく照準できるようにする。
         /// </summary>
         public void ApplyAim(Vector3 targetDir)
         {
             if (targetDir.sqrMagnitude < 0.0001f) return;
 
-            // ゼロ点姿勢における「前方向（発射方向）」を基準にする
-            Vector3 zeroForward = zeroWorldRotation * Vector3.forward;
+            // 接続元（機体）の現在のワールド回転
+            Quaternion currentConnectedRot = Joint.connectedBody.rotation;
 
-            // 目標方向を±angleLimit以内にクランプする
-            Vector3 clampedDir = ClampDirection(zeroForward, targetDir.normalized, angleLimit);
+            // 機体の開始時からの旋回分
+            Quaternion connectedDelta = currentConnectedRot * Quaternion.Inverse(zeroConnectedRotation);
 
-            // クランプ後の方向を向くワールド回転を作る（upはワールド上）
-            // ±60°制限下なので特異点(真上/真下)には到達せず、LookRotationは安定
-            Quaternion targetWorldRot = Quaternion.LookRotation(clampedDir, Vector3.up);
+            // 機体旋回を反映した基準姿勢と、その前方向
+            Quaternion currentZero = connectedDelta * zeroWorldRotation;
+            Vector3 baseForward = currentZero * Vector3.forward;
 
-            // ゼロ点（初期姿勢）を基準とした相対回転に変換
-            Quaternion deltaRot = targetWorldRot * Quaternion.Inverse(zeroWorldRotation);
+            Vector3 aim = targetDir.normalized;
 
-            // ConfigurableJoint.targetRotationは反転して与える仕様
+            // --- ヨー角（水平面投影 + ワールド鉛直軸基準）---
+            Vector3 baseForwardFlat = Vector3.ProjectOnPlane(baseForward, Vector3.up).normalized;
+            Vector3 aimFlat = Vector3.ProjectOnPlane(aim, Vector3.up).normalized;
+            float yawAngle = 0f;
+            if (baseForwardFlat.sqrMagnitude > 0.0001f && aimFlat.sqrMagnitude > 0.0001f)
+            {
+                yawAngle = Mod.SignedAngle(baseForwardFlat, aimFlat, Vector3.up);
+            }
+
+            // --- ピッチ角（仰角の差）---
+            float aimPitch = Mathf.Asin(Mathf.Clamp(aim.y, -1f, 1f)) * Mathf.Rad2Deg;
+            float basePitch = Mathf.Asin(Mathf.Clamp(baseForward.normalized.y, -1f, 1f)) * Mathf.Rad2Deg;
+            float pitchAngle = aimPitch - basePitch;
+
+            // --- 射角制限 ---
+            yawAngle = Mathf.Clamp(yawAngle, -angleLimit, angleLimit);
+            pitchAngle = Mathf.Clamp(pitchAngle, -angleLimit, angleLimit);
+
+            // --- ヨー・ピッチを明示的な軸で作る ---
+            Quaternion yawRot = Quaternion.AngleAxis(yawAngle, Vector3.up);
+            Vector3 yawedForward = yawRot * baseForwardFlat;
+            Vector3 pitchAxis = Vector3.Cross(yawedForward, Vector3.up).normalized;
+            Quaternion pitchRot = Quaternion.AngleAxis(pitchAngle, pitchAxis);
+
+            // --- 目標ワールド姿勢 ---
+            Quaternion targetWorldRot = pitchRot * yawRot * currentZero;
+
+            // --- 機体の姿勢を基準とした相対回転に変換 ---
+            // 目標を、機体の現在姿勢基準の相対に変換
+            Quaternion targetRelativeToConnected = Quaternion.Inverse(currentConnectedRot) * targetWorldRot;
+            // 初期の「機体→砲塔」相対姿勢を基準にする
+            Quaternion initialRelative = Quaternion.Inverse(zeroConnectedRotation) * zeroWorldRotation;
+            // 初期相対からの差分を求める
+            Quaternion deltaRot = Quaternion.Inverse(initialRelative) * targetRelativeToConnected;
+
             Joint.targetRotation = Quaternion.Inverse(deltaRot);
 
             if (rigidbody.IsSleeping())
