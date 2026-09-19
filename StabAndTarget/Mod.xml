@@ -7,17 +7,17 @@
 
 	<!-- General information about the mod. -->
 	<Name>StabAndTarget</Name>
-	<Author>Mod Author</Author> <!-- FIX: Insert your name here. -->
+	<Author>Tebasaki</Author> <!-- FIX: Insert your name here. -->
 	<!-- Major.Minor.Build -->
-	<Version>0.1.0</Version>
+	<Version>0.2.0</Version>
 	
 	<Description>
-A newly created mod. <!-- FIX: Insert a short description here. -->
+Add stabilizer, lock-on system and targeting pod. <!-- FIX: Insert a short description here. -->
 	</Description>
 	
 	<!-- Square icon of the mod. Texture defined in the Resources section.
 		 This is displayed in the mod list and, if WorkshopThumbnail is not set, used as thumbnail when uploaded to the Steam workshop. -->
-	<!-- <Icon name="icon" /> -->
+	<Icon name="icon" />
 	
 	<!-- Texture resource used as thumbnail when uploading the mod to the workshop.
 		 If this is not present, the Icon texture is used instead.
@@ -39,7 +39,7 @@ A newly created mod. <!-- FIX: Insert a short description here. -->
 		 Important: You cannot upload mods to Steam or WeGame while Debug is turned on.
 		 
 		 Note: This value is independent of the Debug values for specific Blocks and Entities.-->
-	<Debug>true</Debug>
+	<Debug>false</Debug>
 	
 	<!-- Whether the mod can be used in MP or only in SP.
 		 SP-only mods are easier to write but obviously more limited in their uses.
@@ -141,6 +141,8 @@ A newly created mod. <!-- FIX: Insert a short description here. -->
 
 		<AudioClip name="Locking" path="sound/Locking.wav" />
 		<AudioClip name="Locked" path="sound/Locked.wav" />
+
+		<Texture name="icon" path="png/icon.png" />
 	</Resources>
 
 
