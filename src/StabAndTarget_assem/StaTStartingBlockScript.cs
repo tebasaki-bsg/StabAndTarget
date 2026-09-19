@@ -17,8 +17,12 @@ namespace StaTSpace
     /// </summary>
     public class StaTStartingBlockScript : BlockScript
     {
+        public static StaTStartingBlockScript Instance { get; private set; }   //シングルトン, ホストのコアブロに付与
+
         public MKey ActivateUIKey;
         public MKey TargetChangeKey;
+
+        public MSlider VolumeSlider;
         
         public Rigidbody rigidbody;
         public BlockBehaviour blockBehaviour;
@@ -36,10 +40,11 @@ namespace StaTSpace
         //シミュ開始時ならば各種情報を登録
         public void Awake()
         {
-            //ターゲット切替えキーを追加
+            //UI起動キー、ターゲット切替えキーを追加
             blockBehaviour = GetComponent<BlockBehaviour>();
             ActivateUIKey = blockBehaviour.AddKey(Mod.isJapanese ? "StaT: UI起動" : "Activate UI", "stat-activate-ui", KeyCode.P);
-            TargetChangeKey = blockBehaviour.AddKey(Mod.isJapanese? "ターゲット切替え":"Change Target", "target-change", KeyCode.B);
+            TargetChangeKey = blockBehaviour.AddKey(Mod.isJapanese ? "ターゲット切替え":"Change Target", "target-change", KeyCode.B);
+            VolumeSlider = blockBehaviour.AddSlider(Mod.isJapanese ? "StaT: ロック音量" : "StaT: Sound", "stat-sound-volume", 0.2f, 0.01f, 1f);
 
             //画像読み込み
             LockAreaTexture = ModTexture.GetTexture("LockAreaIcon");   //ロック可能領域のアイコン
@@ -90,15 +95,27 @@ namespace StaTSpace
                     {
                         StaTTargetController.MyTeam = MPTeam.None;
                     }
-                    
+
+                    //TargetControllerが初期化されていない場合は初期化（ついでにこれでリスポ時は動かない）
+                    if (!StaTTargetController.init)
+                    {
+                        StaTTargetController.SimulationStartInit();
+                        StaTTargetControllerHost.SimulationStartInit();
+
+                        Instance = this;
+                    }
                 }
 
-                //TargetControllerが初期化されていない場合は初期化（誰かのコアブロックが一度やったら二度と走らないので注意！）
-                if (!StaTTargetController.init)
-                {
-                    StaTTargetController.SimulationStartInit();
-                    StaTTargetControllerHost.SimulationStartInit();
-                }
+                
+            }
+        }
+
+        public void Start()
+        {
+            if(Instance == this)
+            {
+                //音量変更
+                StaTSoundController.Instance.ChangeVolume(VolumeSlider.Value);
             }
         }
 

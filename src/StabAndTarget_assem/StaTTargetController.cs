@@ -129,9 +129,6 @@ namespace StaTSpace
                     info.LockState = CurrentAimState();
                     info.CurrentAimRigidbody = IFFDict[CurrentAimID].Rigidbody;
                 }
-
-
-
             }
             else
             {
@@ -199,9 +196,18 @@ namespace StaTSpace
 
                 if (!IFFDict.TryGetValue(id, out iffEntry) || iffEntry == null)
                 {
+                    //各辞書から外す
                     PrimaryLockedList.Remove(id);
                     SecondaryLockedList.Remove(id);
-                    SecondaryLockingTimerDict.Remove(id);
+
+                    //二次ロック準備中の場合は音を止めさせて辞書から外す
+                    if (SecondaryLockingTimerDict.ContainsKey(id))
+                    {
+                        StaTSoundController.Instance.StopLocking();
+
+                        SecondaryLockingTimerDict.Remove(id);
+                    }
+                    
                     OnLockRemoved(id); // 6節: CurrentAimIdの再選択
 
                     continue;
@@ -231,6 +237,9 @@ namespace StaTSpace
                         iffEntry.IFFBehaviour.lockTime = lockTime;
                         iffEntry.IFFBehaviour.LockStateChanged(StaTLockState.Primary);
 
+                        //ロック中の音を鳴らす
+                        StaTSoundController.Instance.PlayLocking();
+
                         AutoReselect();
                         
                     }
@@ -246,14 +255,23 @@ namespace StaTSpace
                         if (SecondaryLockingTimerDict.TryGetValue(id, out remain))
                         {
                             remain -= dt;
+
+                            //二次ロック完了時
                             if (remain <= 0f)
                             {
+                                //一次ロック済・二次ロック準備の辞書から外し、二次ロック済に追加
                                 SecondaryLockingTimerDict.Remove(id);
                                 PrimaryLockedList.Remove(id);
-                                SecondaryLockedList.Add(id); // 二次ロック完了
 
+                                SecondaryLockedList.Add(id);
+
+                                //IFFにロックを通達
                                 iffEntry.LockState = StaTLockState.Secondary;
                                 iffEntry.IFFBehaviour.LockStateChanged(StaTLockState.Secondary);
+
+                                //ロック中の音を止め、ロック完了の音を鳴らす
+                                StaTSoundController.Instance.StopLocking();
+                                StaTSoundController.Instance.PlayLocked();
 
                                 AutoReselect();
 
@@ -273,8 +291,16 @@ namespace StaTSpace
 
                     //一次ロックの場合は一次ロックと二次ロック準備中のリストから外す
                     PrimaryLockedList.Remove(id);
-                    SecondaryLockingTimerDict.Remove(id);
                     SecondaryLockedList.Remove(id);
+
+                    //二次ロック準備中の場合は音を止めさせて辞書から外す
+                    if (SecondaryLockingTimerDict.ContainsKey(id))
+                    {
+                        StaTSoundController.Instance.StopLocking();
+
+                        SecondaryLockingTimerDict.Remove(id);
+                    }
+
                     OnLockRemoved(id); // CurrentAimIdの再選択
                 }
             }

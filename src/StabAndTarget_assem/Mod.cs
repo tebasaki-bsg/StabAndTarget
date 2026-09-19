@@ -18,6 +18,7 @@ namespace StaTSpace
 		public static Canvas ModCanvas;
 		public static GameObject TargetController;
 		public static GameObject GameStateObserver;
+		public static GameObject SoundController;
 		public static bool isJapanese = SingleInstance<LocalisationManager>.Instance.currLangName.Contains("日本語");
 
 		public static Dictionary<string, Transform> StabBaseDict;   //StabBaseをまとめたもの
@@ -53,14 +54,19 @@ namespace StaTSpace
 			scaler.referenceResolution = new Vector2(1920f, 1080f);	//1080pをベースとする
 
 			//ロックオン処理を行うオブジェクト
-			TargetController = new GameObject("TargetController");
+			TargetController = new GameObject("StaTTargetController");
 			TargetController.transform.SetParent(StaTMod.transform);
 			TargetController.AddComponent<StaTTargetController>();
 
 			//ゲームの状態（シミュ中かなど）を監視するオブジェクト
-			GameStateObserver = new GameObject("GameStateObserver");
+			GameStateObserver = new GameObject("StaTGameStateObserver");
 			GameStateObserver.transform.SetParent(StaTMod.transform);
 			GameStateObserver.AddComponent<StaTGameStateObserver>();
+
+			//ゲームの状態（シミュ中かなど）を監視するオブジェクト
+			SoundController = new GameObject("StaTSoundController");
+			SoundController.transform.SetParent(StaTMod.transform);
+			SoundController.AddComponent<StaTSoundController>();
 
 			//BlockSelectorをBW2_UIに追加
 			SingleInstance<BlockSelector>.Instance.transform.parent = StaTMod.transform;

@@ -20,6 +20,7 @@ namespace StaTSpace
 
         public void FixedUpdate()
         {
+            //各ブロックのSafeAwake()より速い
             if(StatMaster.levelSimulating && !IsSimulating)
             {
                 IsSimulating = true;
@@ -35,6 +36,8 @@ namespace StaTSpace
                 StaTTargetController.init = false;
 
                 StatTStabIDContoroller.ClearDictionary();
+
+                StaTSoundController.Instance.StopAllSound();
             }
         }
     }

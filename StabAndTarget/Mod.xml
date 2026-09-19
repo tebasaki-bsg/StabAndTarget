@@ -138,6 +138,9 @@ A newly created mod. <!-- FIX: Insert a short description here. -->
 		<Texture name="IFFIcon" path="png/IFFIcon.png" />
 		<Texture name="LockIcon" path="png/LockIcon.png" />
 		<Texture name="LockAreaIcon" path="png/LockAreaIcon.png" />
+
+		<AudioClip name="Locking" path="sound/Locking.wav" />
+		<AudioClip name="Locked" path="sound/Locked.wav" />
 	</Resources>
 
 

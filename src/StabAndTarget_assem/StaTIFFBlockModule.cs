@@ -82,7 +82,7 @@ namespace StaTSpace
 
         public static Dictionary<MPTeam, Color> TeamColors = new Dictionary<MPTeam, Color>
         {
-            {MPTeam.None,   Color.white},
+            {MPTeam.None,   new Color(0.8f, 0.8f, 0.8f)},
             {MPTeam.Red,    Color.red},
             {MPTeam.Green,  new Color(0.2f, 0.8f, 0.2f)},
             {MPTeam.Orange, new Color(1.0f, 0.6f, 0.1f)},
@@ -270,6 +270,11 @@ namespace StaTSpace
                 else
                 {
                     ColorChange(lockState);
+
+                    if(lockState == StaTLockState.Secondary)
+                    {
+                        LockIconObject.SetActive(true);
+                    }
                 }
 
                 UIColorInit = true;
@@ -352,18 +357,19 @@ namespace StaTSpace
             NameIconObject.transform.SetParent(IFFIconObject.transform);
 
             RectTransform NameRect = NameIconObject.GetComponent<RectTransform>();
-            NameRect.sizeDelta = new Vector2(200f, 100f);
+            NameRect.sizeDelta = new Vector2(350f, 100f);
             NameRect.anchorMin = new Vector2(0.5f, 0.5f);
             NameRect.anchorMax = new Vector2(0.5f, 0.5f);
-            NameRect.anchoredPosition = new Vector2(65, 50);
+            NameRect.anchoredPosition = new Vector2(270, 60);
             NameRect.localScale = Vector3.one;
 
             NameUIText = NameIconObject.GetComponent<Text>();
             NameUIText.text = "Nothing";
             NameUIText.font = Arial;
-            NameUIText.fontSize = 35;
+            NameUIText.fontSize = 45;
+            
             NameUIText.color = Color.white;
-            NameUIText.alignment = TextAnchor.MiddleRight;  //右揃え、左端が中心
+            NameUIText.alignment = TextAnchor.MiddleLeft;  //左揃え（中央）
         }
 
         public void LockStateChanged(StaTLockState value)

@@ -62,6 +62,7 @@
     <Compile Include="StaTGameStateObserver.cs" />
     <Compile Include="StaTIFFBlockModule.cs" />
     <Compile Include="StaTMessageController.cs" />
+    <Compile Include="StaTSoundController.cs" />
     <Compile Include="StaTStabBaseBlockModule.cs" />
     <Compile Include="StaTStabSlaveBlockModule.cs" />
     <Compile Include="StaTStartingBlockScript.cs" />
