@@ -13,9 +13,18 @@ namespace StaTSpace
 
         public static bool IsSimulating = false;
 
+
+        //OnLoad()は、バレンやレベルエディタなど、ゲーム起動から最初にゲームモードが決まった瞬間に呼ばれるらしい
         public void Awake()
         {
             Instance = this;
+
+            //最初のコアブロックだけはOnBlockPlaced()が呼ばれないため、ここで貼り付ける
+            GameObject core = GameObject.Find("Building Machine").transform.Find("StartingBlock").gameObject;
+            if(core.GetComponent<StaTStartingBlockScript>() == null)
+            {
+                core.AddComponent<StaTStartingBlockScript>();
+            }
         }
 
         public void FixedUpdate()

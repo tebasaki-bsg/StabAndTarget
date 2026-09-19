@@ -40,6 +40,8 @@ namespace StaTSpace
         //シミュ開始時ならば各種情報を登録
         public void Awake()
         {
+            Mod.Log("hello from core");
+
             //UI起動キー、ターゲット切替えキーを追加
             blockBehaviour = GetComponent<BlockBehaviour>();
             ActivateUIKey = blockBehaviour.AddKey(Mod.isJapanese ? "StaT: UI起動" : "Activate UI", "stat-activate-ui", KeyCode.P);
