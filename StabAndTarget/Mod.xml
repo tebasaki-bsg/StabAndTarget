@@ -22,7 +22,7 @@ Add stabilizer, lock-on system and targeting pod. <!-- FIX: Insert a short descr
 	<!-- Texture resource used as thumbnail when uploading the mod to the workshop.
 		 If this is not present, the Icon texture is used instead.
 		 This can be set to have different icons in the mod list and the workshop. -->
-	<!-- <WorkshopThumbnail name="thumbnail" /> -->
+	<WorkshopThumbnail name="icon" />
 	
 	<!-- Enables reloading of various values at runtime. This is normally triggered automatically when a file is changed,
 		 you can also trigger it by pressing Ctrl+H.
