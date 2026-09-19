@@ -19,12 +19,8 @@ namespace StaTSpace
         {
             Instance = this;
 
-            //最初のコアブロックだけはOnBlockPlaced()が呼ばれないため、ここで貼り付ける
-            GameObject core = GameObject.Find("Building Machine").transform.Find("StartingBlock").gameObject;
-            if(core.GetComponent<StaTStartingBlockScript>() == null)
-            {
-                core.AddComponent<StaTStartingBlockScript>();
-            }
+            //最初のコアブロックだけはOnBlockPlaced()が呼ばれないため、イベントで検知して貼り付ける
+            Events.OnSceneWithModsCameraInitialised += AddScriptToCore;
         }
 
         public void FixedUpdate()
@@ -47,6 +43,18 @@ namespace StaTSpace
                 StatTStabIDContoroller.ClearDictionary();
 
                 StaTSoundController.Instance.StopAllSound();
+            }
+        }
+
+        /// <summary>
+        /// 最初のコアブロックにスクリプトを貼り付ける関数
+        /// </summary>
+        public void AddScriptToCore()
+        {
+            GameObject core = GameObject.Find("Building Machine").transform.Find("StartingBlock").gameObject;
+            if (core.GetComponent<StaTStartingBlockScript>() == null)
+            {
+                core.AddComponent<StaTStartingBlockScript>();
             }
         }
     }

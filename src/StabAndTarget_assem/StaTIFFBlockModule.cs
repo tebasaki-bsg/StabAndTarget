@@ -80,26 +80,6 @@ namespace StaTSpace
         public bool LastVisible = false;
         public Vector3 PositionVector;
 
-        public static Dictionary<MPTeam, Color> TeamColors = new Dictionary<MPTeam, Color>
-        {
-            {MPTeam.None,   new Color(0.8f, 0.8f, 0.8f)},
-            {MPTeam.Red,    Color.red},
-            {MPTeam.Green,  new Color(0.2f, 0.8f, 0.2f)},
-            {MPTeam.Orange, new Color(1.0f, 0.6f, 0.1f)},
-            {MPTeam.Blue,   new Color(0.2f, 0.6f, 1.0f)},
-        };
-
-        public static Dictionary<StaTLockState, Color> LockStateColors = new Dictionary<StaTLockState, Color>
-        {
-            {StaTLockState.None, Color.white},
-            {StaTLockState.Primary, new Color(0.2f, 0.8f, 0.2f)},
-            {StaTLockState.Secondary, Color.red}
-        };
-
-        public static bool UseUI = true;
-        public static Color AlertColor = Color.red;
-        public static Color FriendColor = new Color(0.2f, 0.6f, 1.0f);
-
         public string MyName
         {
             get
@@ -222,13 +202,13 @@ namespace StaTSpace
             }
 
             
-            NameUIText.color = TeamColors[team];
+            NameUIText.color = StaTUIInfo.TeamColors[team];
 
             //味方であれば味方用のカラーに
             if(!isEnemy && team == StaTTargetController.MyTeam)
             {
-                IFFImage.color = FriendColor;
-                LockImage.color = FriendColor;
+                IFFImage.color = StaTUIInfo.FriendColor;
+                LockImage.color = StaTUIInfo.FriendColor;
             }
 
             LockIconObject.SetActive(false);
@@ -264,14 +244,16 @@ namespace StaTSpace
                 //味方であれば味方用のカラーに
                 if (!isEnemy && team == StaTTargetController.MyTeam)
                 {
-                    IFFImage.color = FriendColor;
-                    LockImage.color = FriendColor;
+                    IFFImage.color = StaTUIInfo.FriendColor;
+                    LockImage.color = StaTUIInfo.FriendColor;
                 }
                 else
                 {
+                    //現在のロック状態を参照して色を変更
                     ColorChange(lockState);
 
-                    if(lockState == StaTLockState.Secondary)
+                    //自分が照準対象であればLockIconをオンに
+                    if(StaTTargetController.CurrentAimID == sessionID)
                     {
                         LockIconObject.SetActive(true);
                     }
@@ -331,7 +313,7 @@ namespace StaTSpace
 
             IFFImage = IFFIconObject.GetComponent<Image>();
             IFFImage.sprite = IFFIcon;
-            IFFImage.color = LockStateColors[StaTLockState.None];
+            IFFImage.color = StaTUIInfo.LockStateColors[StaTLockState.None];
 
             ///<summary>
             ///LockIconObjectの初期化
@@ -348,7 +330,7 @@ namespace StaTSpace
             
             LockImage = LockIconObject.GetComponent<Image>();
             LockImage.sprite = LockIcon;
-            LockImage.color = LockStateColors[StaTLockState.None];
+            LockImage.color = StaTUIInfo.LockStateColors[StaTLockState.None];
 
             ///<summary>
             ///NameIconObjectの初期化
@@ -390,14 +372,15 @@ namespace StaTSpace
         {
             lockState = sendedLockState;
 
-            IFFImage.color = LockStateColors[lockState];
-            LockImage.color = LockStateColors[lockState];
+            IFFImage.color = StaTUIInfo.LockStateColors[lockState];
+            LockImage.color = StaTUIInfo.LockStateColors[lockState];
         }
 
         public void ColorChangeAlert()
         {
-            IFFImage.color = AlertColor;
-            LockImage.color = AlertColor;
+            IFFImage.color = StaTUIInfo.AlertColor;
+            LockImage.color = StaTUIInfo.AlertColor;
         }
     }
+
 }

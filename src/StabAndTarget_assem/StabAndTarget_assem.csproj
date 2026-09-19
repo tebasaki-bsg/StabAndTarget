@@ -72,6 +72,7 @@
     <Compile Include="StaTTargetingPodBlockModule.cs" />
     <Compile Include="StatTIFFIDRegister.cs" />
     <Compile Include="StatTStabIDContoroller.cs" />
+    <Compile Include="StaTUIInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

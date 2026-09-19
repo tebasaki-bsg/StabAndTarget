@@ -76,9 +76,9 @@ namespace StaTSpace
             AppearPDConfigToggle.DisplayInMapper = true;
             AppearPDConfigToggle.Toggled += AppearPDConfig;
 
-            ProportionalSlider = BlockBehaviour.AddSlider(Mod.isJapanese ? "P成分" : "Propotional", "propotional", 10f, 0.0f, 100000f);
+            ProportionalSlider = BlockBehaviour.AddSlider(Mod.isJapanese ? "P成分" : "Propotional", "propotional", 10f, 0.0f, 10000f);
             ProportionalSlider.DisplayInMapper = false;
-            DerivativeSlider = BlockBehaviour.AddSlider(Mod.isJapanese ? "D成分" : "Derivative", "derivative", 9f, 0.0f, 100000f);
+            DerivativeSlider = BlockBehaviour.AddSlider(Mod.isJapanese ? "D成分" : "Derivative", "derivative", 3f, 0.0f, 10000f);
             DerivativeSlider.DisplayInMapper = false;
         }
 
@@ -90,17 +90,21 @@ namespace StaTSpace
             maxDistance = MaxDistanceSlider.Value;
             BulletSpeedSlider = GetSlider(Module.BulletSpeedSlider);
             bulletSpeed = BulletSpeedSlider.Value;
+
+            //パワーは100000倍にする
             PowerSlider = GetSlider(Module.PowerSlider);
-            power = PowerSlider.Value * 100f;
+            power = PowerSlider.Value * 100000f;
+
             ActivateKey = GetKey(Module.ActivateKey);
 
             Joint = GetComponent<ConfigurableJoint>();
             rigidbody = GetComponent<Rigidbody>();
 
+            //P成分・D成分の設定、詳細設定がオンならスライダーから、オフならPower値から設定
             if (AppearPDConfigToggle.IsActive)
             {
-                proportional = ProportionalSlider.Value * 100f;
-                derivative = DerivativeSlider.Value * 100f;
+                proportional = ProportionalSlider.Value * 100000f;
+                derivative = DerivativeSlider.Value * 100000f;
             }
             else
             {
@@ -110,7 +114,6 @@ namespace StaTSpace
 
             SetupJoint();
 
-            // === ゼロ点をここで一度だけ記録する ===
             // ジョイント初期化時のブロックのワールド姿勢を基準として保存
             zeroWorldRotation = rigidbody.rotation;
 
