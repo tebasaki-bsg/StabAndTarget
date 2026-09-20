@@ -13,6 +13,7 @@ namespace StaTSpace
     /// IFFブロックの辞書と、ロックオンを行うクラス。
     /// IFFDict: 全てのIFFが入る辞書
     /// IFFTeamListDict: チームと、そのチームが敵となるIFFのIDをまとめたリストを紐づける辞書
+    /// IFFDictForEnemy: 敵側（IFF.IsEnemyがオンの、事実上六番目のチーム）が使う辞書。ロックオンはせず、距離等で照準対象を切り替える
     /// PrimaryLockedList: 一次ロック（ロック可能領域内侵入で即完了）済のIFFのリスト
     /// SecondaryLockingTimerDict: 二次ロックまでの残り時間
     /// SecondaryLockedList: 二次ロック済のIFFのリスト
@@ -42,6 +43,8 @@ namespace StaTSpace
             {MPTeam.Orange, new List<int>() },
             {MPTeam.Blue, new List<int>() }
         };
+        public static Dictionary<int, IFFEntry> IFFDictForEnemy = new Dictionary<int, IFFEntry>();
+
         public static List<int> PrimaryLockedList = new List<int>();
         public static Dictionary<int, float> SecondaryLockingTimerDict = new Dictionary<int, float>();
         public static List<int> SecondaryLockedList = new List<int>();

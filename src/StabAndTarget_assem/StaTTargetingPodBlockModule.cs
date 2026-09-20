@@ -22,6 +22,10 @@ namespace StaTSpace
         [RequireToValidate]
         public MSliderReference MaxDistanceSlider;
 
+        [XmlElement("MinDistanceSlider")]
+        [RequireToValidate]
+        public MSliderReference MinDistanceSlider;
+
         [XmlElement("BulletSpeedSlider")]
         [RequireToValidate]
         public MSliderReference BulletSpeedSlider;
@@ -30,28 +34,42 @@ namespace StaTSpace
         [RequireToValidate]
         public MSliderReference PowerSlider;
 
+        [XmlElement("DamperSlider")]
+        [RequireToValidate]
+        public MSliderReference DamperSlider;
+
         [XmlElement("ActivateKey")]
         [RequireToValidate]
         public MKeyReference ActivateKey;
+
+        [XmlElement("IsEnemyToggle")]
+        [RequireToValidate]
+        public MToggleReference IsEnemyToggle;
     }
 
     public class StaTTargetingPodBlockModuleBehaviour : BlockModuleBehaviour<StaTTargetingPodBlockModule>
     {
         public MSlider MaxDistanceSlider;
         public float maxDistance;
+        public MSlider MinDistanceSlider;
+        public float minDistance;
+
         public MSlider BulletSpeedSlider;
         public float bulletSpeed;
+
         public MSlider PowerSlider;
         public float power;
+        public MSlider DamperSlider;
+        public float damper;
+
         public MKey ActivateKey;
 
-        public MToggle AppearPDConfigToggle;
-        public MSlider ProportionalSlider;
-        public float proportional;
-        public MSlider DerivativeSlider;
-        public float derivative;
+        public MToggle IsEnemyToggle;
+        public bool isEnemy;
+        public int CheckDistanceTime = 0;
 
         public Rigidbody rigidbody;
+        public Rigidbody targetRigidbody;
 
         public Vector3 TargetPositionVector;
 
@@ -62,7 +80,7 @@ namespace StaTSpace
         public LayerMask addingPointLayerMask = (1 << 12);
 
         public ConfigurableJoint Joint;
-        public bool NoConnected;
+        public bool FindConnected;
 
         private Quaternion zeroWorldRotation;        // 砲塔の初期ワールド姿勢
         private Quaternion zeroConnectedRotation;    // 接続元（機体）の初期ワールド姿勢
@@ -70,56 +88,43 @@ namespace StaTSpace
         // 射角限界（±60°）
         public float angleLimit = 75f;
 
-        public override void SafeAwake()
-        {
-            base.SafeAwake();
-
-            AppearPDConfigToggle = BlockBehaviour.AddToggle(Mod.isJapanese ? "設定を変更" : "PD config", "pd-config", false);
-            AppearPDConfigToggle.DisplayInMapper = true;
-            AppearPDConfigToggle.Toggled += AppearPDConfig;
-
-            ProportionalSlider = BlockBehaviour.AddSlider(Mod.isJapanese ? "P成分" : "Propotional", "propotional", 10f, 0.0f, 10000f);
-            ProportionalSlider.DisplayInMapper = false;
-            DerivativeSlider = BlockBehaviour.AddSlider(Mod.isJapanese ? "D成分" : "Derivative", "derivative", 3f, 0.0f, 10000f);
-            DerivativeSlider.DisplayInMapper = false;
-        }
-
         public override void OnSimulateStart()
         {
             base.OnSimulateStart();
 
+            //各種スライダーを取得
             MaxDistanceSlider = GetSlider(Module.MaxDistanceSlider);
             maxDistance = MaxDistanceSlider.Value;
+            MinDistanceSlider = GetSlider(Module.MinDistanceSlider);
+            minDistance = MinDistanceSlider.Value;
             BulletSpeedSlider = GetSlider(Module.BulletSpeedSlider);
             bulletSpeed = BulletSpeedSlider.Value;
 
-            //パワーは100000倍にする
+            //P成分は100000倍にする
             PowerSlider = GetSlider(Module.PowerSlider);
             power = PowerSlider.Value * 100000f;
 
+            //D成分は10000倍（Pの1/10）にする
+            DamperSlider = GetSlider(Module.DamperSlider);
+            damper = DamperSlider.Value * 10000;
+
             ActivateKey = GetKey(Module.ActivateKey);
+
+            IsEnemyToggle = GetToggle(Module.IsEnemyToggle);
+            isEnemy = IsEnemyToggle.IsActive;
 
             Joint = GetComponent<ConfigurableJoint>();
             rigidbody = GetComponent<Rigidbody>();
 
-            //P成分・D成分の設定、詳細設定がオンならスライダーから、オフならPower値から設定
-            if (AppearPDConfigToggle.IsActive)
-            {
-                proportional = ProportionalSlider.Value * 100000f;
-                derivative = DerivativeSlider.Value * 100000f;
-            }
-            else
-            {
-                proportional = power;
-                derivative = power * 0.3f;
-            }
-
             SetupJoint();
 
-            // ジョイント初期化時のブロックのワールド姿勢を基準として保存
+            //シミュ開始時のブロックのワールド姿勢を基準として保存
             zeroWorldRotation = rigidbody.rotation;
-            //zeroConnectedRotation = Joint.connectedBody.rotation;  // 機体の初期姿勢も記録
-            NoConnected = GetConnectedRotation(out zeroConnectedRotation);
+
+            Mod.Log(zeroWorldRotation.ToString());
+
+            //接続先を取得、接続されてなければNoConnected
+            FindConnected = GetConnectedRotation(out zeroConnectedRotation);
 
 
             BlockPlayerID = BlockBehaviour.ParentMachine.PlayerID;
@@ -130,7 +135,8 @@ namespace StaTSpace
         {
             base.SimulateFixedUpdateHost();
 
-            if (Joint == null)
+            //接続が無ければスルー
+            if (!FindConnected || Joint == null)
             {
                 return;
             }
@@ -138,25 +144,82 @@ namespace StaTSpace
             // キーが押されているときのみ照準
             if (ActivateKey.IsHeld || ActivateKey.EmulationHeld())
             {
-                // --- 狙う位置を決める ---
+                /// <summary>
+                /// 目標のベクトルを取得する。
+                /// 敵⇒最も近い距離のIFF
+                /// ロック先が無い⇒カメラ
+                /// </summary>
+
+                if (isEnemy)
+                {
+                    if(StaTTargetController.IFFDictForEnemy.Count == 0)
+                    {
+                        return;
+                    }
+
+                    if(CheckDistanceTime < 10)
+                    {
+                        CheckDistanceTime++;
+                    }
+                    else
+                    {
+                        CheckDistanceTime = 0;
+
+                        float sqrDistance = float.MaxValue;
+
+                        //最短距離のRigidbodyを取得
+                        foreach (IFFEntry iffEntry in StaTTargetController.IFFDictForEnemy.Values)
+                        {
+                            float thisSqrDistance = (iffEntry.IFFBehaviour.transform.position - transform.position).sqrMagnitude;
+                            if(thisSqrDistance < sqrDistance)
+                            {
+                                targetRigidbody = iffEntry.Rigidbody;
+                            }
+                        }
+
+                        Mod.Log("Current target is " + targetRigidbody.position);
+                    }
+
+                    if(targetRigidbody == null)
+                    {
+                        return;
+                    }
+
+                    //敵からは一次ロック
+                    TargetPositionVector = targetRigidbody.position;
+                }
+                
                 if (!playerTargetingInfo.LockingSomething)
                 {
-                    if (Physics.Raycast(StaTTargetController.CamPosition, StaTTargetController.CamForward, out RaycastHit raycastHit, maxDistance, layerMask, QueryTriggerInteraction.Ignore))
+                    //カメラからRayを飛ばす。(カメラ座標 + カメラ方向 * 最小距離)がスタート地点
+                    if (Physics.Raycast(StaTTargetController.CamPosition + StaTTargetController.CamForward * minDistance, StaTTargetController.CamForward, out RaycastHit raycastHit, maxDistance - minDistance, layerMask, QueryTriggerInteraction.Ignore))
+                    {
                         TargetPositionVector = raycastHit.point;
+                    }
+                    
+                    //何もなければ最大距離
                     else
+                    {
                         TargetPositionVector = StaTTargetController.CamPosition + StaTTargetController.CamForward * maxDistance;
+                    }
+                        
                 }
+                //一次ロックは敵の座標そのまま
                 else if (playerTargetingInfo.LockState == StaTLockState.Primary)
                 {
                     TargetPositionVector = playerTargetingInfo.CurrentAimRigidbody.transform.position;
                 }
+                //二次ロックは弾速と敵の速度から偏差を加える
                 else
                 {
                     TargetPositionVector = PredictPosition(transform.position, playerTargetingInfo.CurrentAimRigidbody.transform.position, playerTargetingInfo.CurrentAimRigidbody, bulletSpeed);
                 }
 
-                // --- 照準を適用 ---
+                //照準を向ける
                 ApplyAim(TargetPositionVector - transform.position);
+
+
+
             }
         }
 
@@ -174,7 +237,7 @@ namespace StaTSpace
             Joint.secondaryAxis = new Vector3(0f, 1f, 0f);
 
             // 全軸ワールド座標基準
-            Joint.configuredInWorldSpace = true;
+            Joint.configuredInWorldSpace = false;
 
             // Slerpで全回転をまとめて制御
             Joint.rotationDriveMode = RotationDriveMode.Slerp;
@@ -182,13 +245,16 @@ namespace StaTSpace
             // JointDrive（positionSpring=P項, positionDamper=D項）
             JointDrive drive = new JointDrive
             {
-                positionSpring = proportional,
-                positionDamper = derivative,
+                positionSpring = power,
+                positionDamper = damper,
                 maximumForce = Mathf.Infinity
             };
             Joint.slerpDrive = drive;
         }
 
+        /// <summary>
+        /// 根本接続が繋がるブロックの初期の姿勢を取得する関数。
+        /// </summary>
         public bool GetConnectedRotation(out Quaternion connectedRotation)
         {
             Rigidbody hitRigidbody;
@@ -251,13 +317,14 @@ namespace StaTSpace
 
             // 機体旋回を反映した基準姿勢と、その前方向
             Quaternion currentZero = connectedDelta * zeroWorldRotation;
-            Vector3 baseForward = currentZero * Vector3.forward;
+            Vector3 baseForward = currentZero * Vector3.forward;    //(0,0,1)をcurrentZero方向に向けたベクトル
 
             Vector3 aim = targetDir.normalized;
 
             // --- ヨー角（水平面投影 + ワールド鉛直軸基準）---
             Vector3 baseForwardFlat = Vector3.ProjectOnPlane(baseForward, Vector3.up).normalized;
             Vector3 aimFlat = Vector3.ProjectOnPlane(aim, Vector3.up).normalized;
+
             float yawAngle = 0f;
             if (baseForwardFlat.sqrMagnitude > 0.0001f && aimFlat.sqrMagnitude > 0.0001f)
             {
@@ -283,6 +350,7 @@ namespace StaTSpace
             Quaternion targetWorldRot = pitchRot * yawRot * currentZero;
 
             // --- 機体の姿勢を基準とした相対回転に変換 ---
+
             // 目標を、機体の現在姿勢基準の相対に変換
             Quaternion targetRelativeToConnected = Quaternion.Inverse(currentConnectedRot) * targetWorldRot;
             // 初期の「機体→砲塔」相対姿勢を基準にする
@@ -320,18 +388,27 @@ namespace StaTSpace
             return Quaternion.AngleAxis(limit, axis) * reference;
         }
 
+        /// <summary>
+        /// 敵の速度と弾速から弾着時の未来位置を予測する関数
+        /// </summary>
         public static Vector3 PredictPosition(Vector3 myPos, Vector3 enemyPos, Rigidbody enemyRb, float bulletSpd)
         {
             Vector3 toTarget = enemyPos - myPos;
             Vector3 enemyVel = enemyRb.velocity;
+
+            //二次方程式の係数
             float a = Vector3.Dot(enemyVel, enemyVel) - bulletSpd * bulletSpd;
             float b = 2f * Vector3.Dot(toTarget, enemyVel);
             float c = Vector3.Dot(toTarget, toTarget);
+
             float t = SolveInterceptTime(a, b, c);
             if (t <= 0f) return enemyPos;
             return enemyPos + enemyVel * t;
         }
 
+        /// <summary>
+        /// at^2 + bt + c = 0を解く関数  
+        /// </summary>
         public static float SolveInterceptTime(float a, float b, float c)
         {
             if (Mathf.Abs(a) < 0.001f)
@@ -348,12 +425,6 @@ namespace StaTSpace
             float t = Mathf.Min(t1, t2);
             if (t < 0f) t = Mathf.Max(t1, t2);
             return t;
-        }
-
-        public void AppearPDConfig(bool value)
-        {
-            ProportionalSlider.DisplayInMapper = value;
-            DerivativeSlider.DisplayInMapper = value;
         }
     }
 }

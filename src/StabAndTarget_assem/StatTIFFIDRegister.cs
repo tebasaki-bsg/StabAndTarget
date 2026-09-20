@@ -56,8 +56,14 @@ namespace StaTSpace
                 StaTTargetController.IFFTeamListDict[team].Add(NextSessionID);
             }
 
+            //敵勢力でない場合は敵側から見た辞書にも登録
+            if (!iffBehaviour.isEnemy)
+            {
+                StaTTargetController.IFFDictForEnemy.Add(NextSessionID, iffEntry);
+            }
+
             //マルチの時はクライアントに登録命令を送信（ソロのレベルエディタがあるので>1とする）
-            if(StatMaster.isMP)
+            if (StatMaster.isMP)
             {
                 //クライアントに登録命令を送信
                 ModNetworking.SendToAll(StaTMessageController.RegisterIFFMessageType.CreateMessage(Block.From(bb), NextSessionID));
@@ -106,6 +112,12 @@ namespace StaTSpace
                 //それ以外は辞書にIDを登録
                 StaTTargetController.IFFTeamListDict[team].Add(sessionID);
             }
+
+            //敵勢力でない場合は敵側から見た辞書にも登録
+            if (!iffBehaviour.isEnemy)
+            {
+                StaTTargetController.IFFDictForEnemy.Add(NextSessionID, iffEntry);
+            }
         }
 
         /// <summary>
@@ -114,6 +126,7 @@ namespace StaTSpace
         /// </summary>
         public static void ClearDictionary()
         {
+            //IDとIFFのブロックを繋ぐ辞書をクリア
             StaTTargetController.IFFDict.Clear();
 
             //チームごとに敵をまとめた辞書もクリア
@@ -121,6 +134,9 @@ namespace StaTSpace
             {
                 StaTTargetController.IFFTeamListDict[team].Clear();
             }
+
+            //敵側から見た辞書もクリア
+            StaTTargetController.IFFDictForEnemy.Clear();
 
             //各ロック済・中リストをクリア
             StaTTargetController.PrimaryLockedList.Clear();
@@ -148,6 +164,10 @@ namespace StaTSpace
                 }
             }
 
+            //敵側から見た辞書からも削除
+            StaTTargetController.IFFDictForEnemy.Remove(SessionID);
+
+            //被照準状態かの確認を、各ロック済辞書を消す前に行う
             bool wasCurrentAim = (StaTTargetController.CurrentAimID == SessionID);
 
             if(StaTTargetController.PrimaryLockedList.Contains(SessionID))
