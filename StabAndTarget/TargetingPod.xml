@@ -70,8 +70,7 @@
 		<Slider displayName="Max Distance" key="targetingpod-max-distance" min="0" max="2000" default="1000" unclamped="true"/>
 		<Slider displayName="Min Distance" key="targetingpod-min-distance" min="0" max="1000" default="100" unclamped="true"/>
 		<Slider displayName="Bullet Speed" key="targetingpod-bulletspeed" min="0" max="2000" default="800" unclamped="true"/>
-		<Slider displayName="Power" key="targetingpod-power" min="0" max="5000" default="200" unclamped="true"/>
-		<Slider displayName="Damper" key="targetingpod-damper" min="0" max="5000" default="100" unclamped="true"/>
+		<Slider displayName="Damper" key="targetingpod-damper" min="0" max="200" default="50" unclamped="true"/>
 		
 	</ModuleMapperTypes>
 
@@ -81,7 +80,6 @@
 			<MaxDistanceSlider key="targetingpod-max-distance" />
 			<MinDistanceSlider key="targetingpod-min-distance" />
 			<BulletSpeedSlider key="targetingpod-bulletspeed" />
-			<PowerSlider key="targetingpod-power" />
 			<DamperSlider key="targetingpod-damper" />
 			<ActivateKey key="targetingpod-activate" />
 			<IsEnemyToggle key="targetingpod-isenemy" />

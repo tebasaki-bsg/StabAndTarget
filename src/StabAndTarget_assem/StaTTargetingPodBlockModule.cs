@@ -30,10 +30,6 @@ namespace StaTSpace
         [RequireToValidate]
         public MSliderReference BulletSpeedSlider;
 
-        [XmlElement("PowerSlider")]
-        [RequireToValidate]
-        public MSliderReference PowerSlider;
-
         [XmlElement("DamperSlider")]
         [RequireToValidate]
         public MSliderReference DamperSlider;
@@ -57,8 +53,6 @@ namespace StaTSpace
         public MSlider BulletSpeedSlider;
         public float bulletSpeed;
 
-        public MSlider PowerSlider;
-        public float power;
         public MSlider DamperSlider;
         public float damper;
 
@@ -77,9 +71,6 @@ namespace StaTSpace
         public PlayerTargetingInfo playerTargetingInfo;
 
         public LayerMask layerMask = (1 << 0) | (1 << 12) | (1 << 14) | (1 << 25) | (1 << 26);
-        public LayerMask addingPointLayerMask = (1 << 12);
-
-        public bool init = false;
 
         public override void OnSimulateStart()
         {
@@ -90,14 +81,10 @@ namespace StaTSpace
             maxDistance = MaxDistanceSlider.Value;
             MinDistanceSlider = GetSlider(Module.MinDistanceSlider);
             minDistance = MinDistanceSlider.Value;
+
             BulletSpeedSlider = GetSlider(Module.BulletSpeedSlider);
             bulletSpeed = BulletSpeedSlider.Value;
 
-            //P成分は100000倍にする
-            PowerSlider = GetSlider(Module.PowerSlider);
-            power = PowerSlider.Value * 100000f;
-
-            //D成分は10000倍（Pの1/10）にする
             DamperSlider = GetSlider(Module.DamperSlider);
             damper = DamperSlider.Value;
 
