@@ -8,8 +8,10 @@ using Modding.Serialization;
 using Modding.Blocks;
 using Modding.Common;
 using UnityEngine;
+using Vector3 = UnityEngine.Vector3;
 using UnityEngine.UI;
 using Localisation;
+using UnityEngine.Rendering;
 
 namespace StaTSpace
 {
@@ -23,9 +25,9 @@ namespace StaTSpace
         [RequireToValidate]
         public MSliderReference MasterIDSlider;
 
-        [XmlElement("PowerSlider")]
+        [XmlElement("DamperSlider")]
         [RequireToValidate]
-        public MSliderReference PowerSlider;
+        public MSliderReference DamperSlider;
 
         [XmlElement("ActivateKey")]
         [RequireToValidate]
@@ -36,16 +38,13 @@ namespace StaTSpace
     {
         public MSlider MasterIDSlider;
         public int masterID;
+
         public MSlider PowerSlider;
         public float power;
+        public MSlider DamperSlider;
+        public float damper;
+
         public MKey ActivateKey;
-
-        public MToggle AppearPDConfigToggle;
-
-        public MSlider ProportionalSlider;
-        public float proportional;
-        public MSlider DerivativeSlider;
-        public float derivative;
 
         public int BlockPlayerID;
         public Rigidbody rigidbody;
@@ -56,24 +55,9 @@ namespace StaTSpace
         public Transform MasterTransform;
         public Rigidbody MasterRigidbody;
 
-        public Quaternion CorrectionQuaternion;
-        public UnityEngine.Vector3 CorrectionVector;
-        public UnityEngine.Vector3 CorrectionTorque;
-
         public override void SafeAwake()
         {
             base.SafeAwake();
-
-            //P成分・D成分を調整する用のトグルを作る
-            AppearPDConfigToggle = BlockBehaviour.AddToggle(Mod.isJapanese ? "設定を変更" : "PD config", "pd-config", false);
-            AppearPDConfigToggle.DisplayInMapper = true;
-            AppearPDConfigToggle.Toggled += AppearPDConfig;
-
-            //P成分・D成分用のスライダー
-            ProportionalSlider = BlockBehaviour.AddSlider(Mod.isJapanese ? "P成分" : "Propotional", "propotional", 10f, 0.0f, 1000f);
-            ProportionalSlider.DisplayInMapper = false;
-            DerivativeSlider = BlockBehaviour.AddSlider(Mod.isJapanese ? "D成分" : "Derivative", "derivative", 9f, 0.0f, 1000f);
-            DerivativeSlider.DisplayInMapper = false;
 
             //ブロックの持ち主のID
             BlockPlayerID = BlockBehaviour.ParentMachine.PlayerID;
@@ -87,25 +71,16 @@ namespace StaTSpace
             MasterIDSlider = GetSlider(Module.MasterIDSlider);
             masterID = (int)MasterIDSlider.Value;
 
-            PowerSlider = GetSlider(Module.PowerSlider);
-            power = PowerSlider.Value;
+            DamperSlider = GetSlider(Module.DamperSlider);
+            damper = DamperSlider.Value;
 
             ActivateKey = GetKey(Module.ActivateKey);
-
-            if (AppearPDConfigToggle.IsActive)
-            {
-                proportional = ProportionalSlider.Value;
-                derivative = DerivativeSlider.Value;
-            }
-            else
-            {
-                proportional = power;
-                derivative = power * 0.9f;
-            }
 
             MasterIDString = masterID.ToString() + "_" + BlockPlayerID.ToString();
 
             rigidbody = GetComponent<Rigidbody>();
+            rigidbody.angularDrag = damper;
+            rigidbody.inertiaTensor = new Vector3(10f, 10f, 10f);
         }
 
         public override void SimulateFixedUpdateHost()
@@ -122,6 +97,7 @@ namespace StaTSpace
                 init = true;
             }
 
+            //親が存在しない or 左右どちらかのモーターがどこにも接続していない
             if (MasterTransform == null)
             {
                 return;
@@ -129,36 +105,13 @@ namespace StaTSpace
 
             if(ActivateKey.IsHeld || ActivateKey.EmulationHeld())
             {
-                //誤差クォータニオン（回転） = 目標角度×現在角度^-1
-                CorrectionQuaternion = MasterTransform.rotation * Quaternion.Inverse(transform.rotation);
-
-                //誤差クォータニオンを回転軸と回転量に分解
-                CorrectionQuaternion.ToAngleAxis(out float CorrectionAngle, out UnityEngine.Vector3 CorrectionAxis);
-
-                if (CorrectionAngle > 180f)
-                {
-                    CorrectionAngle -= 360f;
-                }
-
-                if (Mathf.Abs(CorrectionAngle) > Mathf.Epsilon)
-                {
-                    //誤差ベクトル（回転）＝軸(axis)×（角度(angle)のラジアン化）
-                    CorrectionVector = CorrectionAxis * (CorrectionAngle * Mathf.Deg2Rad);
-
-                    //修正用ベクトル = 誤差ベクトル×P - 相対回転速度×D
-                    CorrectionTorque = (CorrectionVector * proportional) - ((rigidbody.angularVelocity - MasterRigidbody.angularVelocity) * derivative);
-
-                    rigidbody.AddTorque(CorrectionTorque * power, ForceMode.Acceleration);
-                }
+                rigidbody.rotation = MasterTransform.rotation;
             }
-
-            
         }
 
-        public void AppearPDConfig(bool value)
+        public override void OnSimulateStop()
         {
-            ProportionalSlider.DisplayInMapper = value;
-            DerivativeSlider.DisplayInMapper = value;
+            base.OnSimulateStop();
         }
     }
 }

@@ -66,7 +66,7 @@
 		 Check the documentation for more information on how to use modules. -->
 	<ModuleMapperTypes>
 		<Slider displayName="ID" key="master-id" min="0" max="100" default="0" unclamped="true"/>
-		<Slider displayName="Power" key="power" min="0" max="100" default="10" unclamped="true"/>
+		<Slider displayName="Damper" key="damper" min="0" max="10000" default="3" unclamped="true"/>
 		<Key displayName="Activate" key="activate" default="C" />
 	</ModuleMapperTypes>
 
@@ -74,7 +74,7 @@
 		<StaTStabSlaveBlockModule modid="535315b3-705a-4f03-94c3-51584dff3863">
 			<!-- XmlElement("AA") key="bb" /  Slider displayName="CC" key="bb" /  AA key="bb"-->
 			<MasterIDSlider key="master-id" />
-			<PowerSlider key="power" />
+			<DamperSlider key="damper" />
 			<ActivateKey key="activate" />
 		</StaTStabSlaveBlockModule>
 	</Modules>
@@ -169,6 +169,10 @@
 	</BasePoint>
 	
 	<AddingPoints>
-		
+		<AddingPoint>
+			<Position x="0.0" y="0.0" z="0.5" />
+			<Rotation x="0.0" y="180.0" z="0.0" />
+			<Stickiness enabled="true" radius="0.3"/>
+		</AddingPoint>
 	</AddingPoints>
 </Block>
