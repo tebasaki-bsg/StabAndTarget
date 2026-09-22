@@ -23,7 +23,7 @@
 	<ID>0</ID>
 	
 	<!-- Name of the block, shown in the user interface. -->
-	<Name>StabBase</Name>
+	<Name>Stab Base</Name>
 	
 	<!-- TODO: Change the mass to something appropriate -->
 	<Mass>0.6</Mass>

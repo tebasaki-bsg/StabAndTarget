@@ -1,3 +1,7 @@
 ver0.3.2
 ・Besiege ver1.91への対応処理
 ・TargetingPodのマルチでの不具合修正（検証は多重起動まで）
+
+ver0.3.3
+・StabBaseの名前をStab Baseに、StabSlaveの名前を Stab Slaveに
+・IFF Blockの重量を0.6→0.3に

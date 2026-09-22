@@ -3,3 +3,5 @@
 *.obj binary
 effects/** binary
 effectsMac/** binary
+*           text=auto
+*.txt		text eol=lf
