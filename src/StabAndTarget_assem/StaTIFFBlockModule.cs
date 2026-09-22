@@ -281,7 +281,11 @@ namespace StaTSpace
             {
                 LastVisible = !LastVisible;
 
+                //IFF全体のアイコンを表示
                 IFFIconObject.SetActive(LastVisible);
+
+                //画面のプレイヤーに照準されていれば、照準中アイコンを表示
+                LockIconObject.SetActive(currentAiming);
             }
         }
 
@@ -320,7 +324,6 @@ namespace StaTSpace
             /// </summary>
             LockIconObject = new GameObject("LockIcon", typeof(RectTransform), typeof(Image));
             LockIconObject.transform.SetParent(IFFIconObject.transform);
-            LockIconObject.SetActive(false);
 
             RectTransform LockRect = LockIconObject.GetComponent<RectTransform>();
             LockRect.sizeDelta = new Vector2(300f, 300f);

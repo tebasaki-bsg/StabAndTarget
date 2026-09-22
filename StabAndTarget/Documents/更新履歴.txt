@@ -5,3 +5,6 @@ ver0.3.2
 ver0.3.3
 ・StabBaseの名前をStab Baseに、StabSlaveの名前を Stab Slaveに
 ・IFF Blockの重量を0.6→0.3に
+
+ver0.3.4
+・UI起動時、ロック中の全てのIFFに照準状態のアイコンが出る問題を修正
