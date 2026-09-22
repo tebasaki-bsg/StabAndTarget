@@ -1,0 +1,3 @@
+ver0.3.2
+・Besiege ver1.91への対応処理
+・TargetingPodのマルチでの不具合修正（検証は多重起動まで）
