@@ -90,9 +90,16 @@ namespace StaTSpace
             if(!init)
             {
                 //Masterを探す
-
-                MasterTransform = Mod.StabBaseDict[MasterIDString];
-                MasterRigidbody = MasterTransform.gameObject.GetComponent<Rigidbody>();
+                if(Mod.StabBaseDict.ContainsKey(MasterIDString))
+                {
+                    MasterTransform = Mod.StabBaseDict[MasterIDString];
+                    MasterRigidbody = MasterTransform.gameObject.GetComponent<Rigidbody>();
+                }
+                else
+                {
+                    Mod.Warning(Mod.isJapanese ? "StabSlaveの基準となるStabBaseブロックがありません。ブロックを設置するかIDを確認してください。" : "StabSlace couldn't find StabBase with same ID. Please place StabBase and set ID.");
+                }
+                
 
                 init = true;
             }

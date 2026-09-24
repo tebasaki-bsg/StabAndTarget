@@ -80,6 +80,14 @@ namespace StaTSpace
         /// </summary>
         public static void RegisterIFFClient(int sessionID, BlockBehaviour bb, StaTIFFBlockModuleBehaviour iffBehaviour)
         {
+            //既にIDが登録されている場合は弾く
+            if(StaTTargetController.IFFDict.ContainsKey(sessionID))
+            {
+                Mod.Warning(Mod.isJapanese ? "取得したIDを持つIFFは既に存在しています。": "The IFF for the sended ID already exists.");
+
+                return;
+            }
+
             //登録用に引数からIFFEntryを作る
             var iffEntry = new IFFEntry
             {
@@ -116,7 +124,7 @@ namespace StaTSpace
             //敵勢力でない場合は敵側から見た辞書にも登録
             if (!iffBehaviour.isEnemy)
             {
-                StaTTargetController.IFFDictForEnemy.Add(NextSessionID, iffEntry);
+                StaTTargetController.IFFDictForEnemy.Add(sessionID, iffEntry);
             }
         }
 
